@@ -54,3 +54,13 @@
             path: /home/eviljonny/.bashrc
             line: . "$HOME/.asdf/completions/asdf.bash"
             state: present
+
+- name: Allow sudo with no password for eviljonny
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/010_eviljonny-nopasswd
+    owner: root
+    group: root
+    mode: "0440"
+    content: "eviljonny ALL=(ALL) NOPASSWD: ALL"
+
