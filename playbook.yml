@@ -1,0 +1,9 @@
+---
+- hosts: raspberrypi,raspberrypi-virt
+  roles:
+    - raspbian-base
+# - hosts: octoprint
+#   roles:
+#     - octoprint
+#   vars_files:
+#     - vars/octoprint

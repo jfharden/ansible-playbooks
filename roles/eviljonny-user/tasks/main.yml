@@ -1,0 +1,56 @@
+---
+- name: Add user eviljonny
+  become: true
+  ansible.builtin.user:
+    name: eviljonny
+    comment: Jonathan Harden
+    state: present
+    groups: sudo
+    append: yes
+
+- name: Configure eviljonny
+  become: true
+  become_user: eviljonny
+  block:
+    - name: Create ansible remote tmp directory
+      ansible.builtin.file:
+        path: /home/eviljonny/.ansible/tmp
+        state: directory
+        owner: eviljonny
+        group: eviljonny
+        mode: 0700
+
+    - name: Create ssh config directory
+      ansible.builtin.file:
+        path: /home/eviljonny/.ssh
+        state: directory
+        owner: eviljonny
+        group: eviljonny
+        mode: 0755
+
+    - name: Add eviljonnys ssh public keys
+      get_url:
+        url: https://github.com/jfharden.keys
+        dest: /home/eviljonny/.ssh/authorized_keys
+        mode: '0640'
+
+    - name: Install asdf-vm
+      ansible.builtin.git:
+        repo: "https://github.com/asdf-vm/asdf.git"
+        dest: /home/eviljonny/.asdf
+        version: "v{{ asdf_version }}"
+
+    - name: Configure bashrc
+      when: asdf_add_to_bashrc|bool
+      block:
+        - name: Add asdf config to bashrc
+          ansible.builtin.lineinfile:
+            path: /home/eviljonny/.bashrc
+            line: . "$HOME/.asdf/asdf.sh"
+            state: present
+
+        - name: Add asdf autocompletions to bashrc
+          ansible.builtin.lineinfile:
+            path: /home/eviljonny/.bashrc
+            line: . "$HOME/.asdf/completions/asdf.bash"
+            state: present

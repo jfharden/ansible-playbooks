@@ -1,0 +1,12 @@
+---
+- hosts: raspbianvirt
+  roles:
+    - raspbian-base
+    - eviljonny-user
+  vars_files:
+    - vars/raspbian.yml
+# - hosts: octoprint
+#   roles:
+#     - octoprint
+#   vars_files:
+#     - vars/octoprint
