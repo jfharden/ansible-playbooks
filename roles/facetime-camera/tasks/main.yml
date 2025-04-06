@@ -1,0 +1,21 @@
+- name: Get hardware device list
+  ansible.builtin.shell:
+    cmd: "lspci"
+  register: lspci_output
+  changed_when: false
+
+- name: Install FacetimeHD camera drivers
+  when: lspci_output.stdout is search(pattern=".*Broadcom.*720p FaceTime HD Camera")
+  become: true
+  block:
+    - name: Add facetimehd ppa
+      ansible.builtin.apt_repository:
+        repo: ppa:greg-whiteley/facetimehd
+
+    - name: Install drivers
+      ansible.builtin.apt:
+        name:
+          - facetimehd-dkms
+          - facetimehd-firmware
+        update_cache: yes
+        state: present
