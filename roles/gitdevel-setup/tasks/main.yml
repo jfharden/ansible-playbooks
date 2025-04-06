@@ -35,6 +35,20 @@
     name: git
     state: present
 
+- name: git-gui is installed
+  when: install_visual_git_tools
+  become: true
+  ansible.builtin.apt:
+    name: git-gui
+    state: present
+
+- name: meld is installed
+  when: install_visual_git_tools
+  become: true
+  ansible.builtin.apt:
+    name: meld
+    state: present
+
 - name: Set git username
   ansible.builtin.git_config:
     name: user.name

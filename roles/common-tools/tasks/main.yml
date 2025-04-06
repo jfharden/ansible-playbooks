@@ -1,0 +1,6 @@
+---
+- name: Install ag
+  become: true
+  ansible.builtin.apt:
+    name: silversearcher-ag
+    state: present

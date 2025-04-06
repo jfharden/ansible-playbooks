@@ -7,3 +7,4 @@
     - role: vim-config
       vars:
         remove_vim_instant_markdown: true
+    - common-tools

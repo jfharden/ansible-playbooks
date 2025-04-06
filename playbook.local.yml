@@ -5,7 +5,9 @@
       prompt: "Sudo password"
       private: yes
   roles:
-    - gitdevel-setup
+    - role: gitdevel-setup
+      vars:
+        install_visual_git_tools: true
     - bash-config
     - role: asdf-setup
       vars:
@@ -17,3 +19,4 @@
           shellcheck: "0.10.0"
     - validate-local-configured 
     - vim-config
+    - common-tools
