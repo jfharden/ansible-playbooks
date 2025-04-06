@@ -1,0 +1,6 @@
+- name: Update asdf plugins
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: "source /home/eviljonny/.bashrc && asdf plugin update --all"
+
+

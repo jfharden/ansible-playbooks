@@ -1,0 +1,19 @@
+- name: Check for asdf availability
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: command -v asdf
+  ignore_errors: true
+  register:
+    asdf_availability_check
+  changed_when: False
+
+- name: Assert asdf command available
+  ansible.builtin.assert:
+    that: asdf_availability_check.rc == 0
+    fail_msg: "The ASDF command is not in your PATH, you need to launch a new shell and run the playbook again"
+
+- name: Assert asdf shims in path
+  ansible.builtin.assert:
+    that: "{{ lookup('ansible.builtin.env', 'PATH', default='') is search('.asdf/shims') }}"
+    success_msg: "Shell has ASDF shims directory in PATH"
+    fail_msg: "Shell does not have ASDF shims directory in PATH, you need to launch a new shell and run the playbook again"

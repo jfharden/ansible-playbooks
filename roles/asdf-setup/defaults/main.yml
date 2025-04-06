@@ -1,0 +1,5 @@
+plugins_to_install:
+  - nodejs
+tool_versions:
+  nodejs: "22.14.0"
+asdf_update_plugins: false

@@ -1,0 +1,19 @@
+---
+- hosts: local
+  vars_prompt:
+    - name: "ansible_become_pass"
+      prompt: "Sudo password"
+      private: yes
+  roles:
+    - gitdevel-setup
+    - bash-config
+    - role: asdf-setup
+      vars:
+        plugins_to_install:
+          - nodejs
+          - shellcheck
+        tool_versions:
+          nodejs: "22.14.0"
+          shellcheck: "0.10.0"
+    - validate-local-configured 
+    - vim-config

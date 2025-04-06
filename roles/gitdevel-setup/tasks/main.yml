@@ -1,0 +1,54 @@
+---
+- name: Create gitdevel directory
+  ansible.builtin.file:
+    path: /home/eviljonny/gitdevel
+    state: directory
+    owner: eviljonny
+    group: eviljonny
+    mode: 0700
+
+- name: Create github.com/jfharden directory
+  ansible.builtin.file:
+    path: /home/eviljonny/gitdevel/github.com/jfharden
+    state: directory
+    owner: eviljonny
+    group: eviljonny
+    mode: 0700
+
+- name: Create bitbucket.org/eviljonny directory
+  ansible.builtin.file:
+    path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny
+    state: directory
+    owner: eviljonny
+    group: eviljonny
+    mode: 0700
+
+- name: Update apt cache
+  become: true
+  ansible.builtin.apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: git is installed
+  become: true
+  ansible.builtin.apt:
+    name: git
+    state: present
+
+- name: Set git username
+  ansible.builtin.git_config:
+    name: user.name
+    value: Jonathan Harden
+    scope: global
+
+- name: Set git email
+  ansible.builtin.git_config:
+    name: user.email
+    value: jfharden@gmail.com
+    scope: global
+
+- name: Set git autoSetupRemote
+  ansible.builtin.git_config:
+    name: push.autoSetupRemote
+    value: true
+    scope: global

@@ -1,0 +1,76 @@
+---
+- name: Create bitbucket.org/eviljonny/vimconfig directory
+  ansible.builtin.file:
+    path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig
+    state: directory
+    owner: eviljonny
+    group: eviljonny
+    mode: 0700
+
+- name: Symlink .vim to git dir
+  ansible.builtin.file:
+    src: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/
+    dest: /home/eviljonny/.vim
+    owner: eviljonny
+    group: eviljonny
+    state: link
+    force: true
+  
+- name: Checkout vimconfig repo
+  ansible.builtin.git:
+    repo: git@bitbucket.org:eviljonny/vimconfig.git
+    dest: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/
+    accept_hostkey: true
+    force: false
+    update: false
+    version: migrate-to-coc
+
+- name: vim is installed
+  become: true
+  ansible.builtin.apt:
+    name: vim
+    state: present
+
+- name: ctags is installed
+  become: true
+  ansible.builtin.apt:
+    name: exuberant-ctags
+    state: present
+
+- name: Disable vim-instant-markdown
+  when: remove_vim_instant_markdown
+  block:
+    - name: Comment out Plug install
+      ansible.builtin.replace:
+        path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/vimrc
+        regexp: "^(Plug 'instant-markdown/vim-instant-markdown.*)$"
+        replace: '" \1'
+
+    - name: Ensure vim-instant-markdown dir does not exist
+      ansible.builtin.file:
+        path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/plugged/vim-instant-markdown
+        state: absent
+
+- name: Install vim-instant-markdown dependencies
+  when: not remove_vim_instant_markdown
+  block:
+  - name: install linux dependencies
+    when: ansible_system == "Linux"
+    block:
+    - name: Install xdg-utils
+      become: true
+      ansible.builtin.apt:
+        name: xdg-utils
+        state: present
+
+    - name: Install curl
+      become: true
+      ansible.builtin.apt:
+        name: curl
+        state: present
+
+    - name: Install instant-markdown-d
+      community.general.npm:
+        executable: /home/eviljonny/.asdf/shims/npm
+        name: instant-markdown-d
+        global: true

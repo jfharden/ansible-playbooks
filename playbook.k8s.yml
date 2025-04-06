@@ -1,0 +1,9 @@
+---
+- hosts: k8s_control_nodes 
+  roles:
+    - gitdevel-setup
+    - bash-config
+    - asdf-setup
+    - role: vim-config
+      vars:
+        remove_vim_instant_markdown: true
