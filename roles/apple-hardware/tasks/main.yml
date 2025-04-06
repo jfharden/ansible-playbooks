@@ -1,0 +1,53 @@
+- name: Get PCI device list
+  ansible.builtin.shell:
+    cmd: "lspci"
+  register: lspci_output
+  changed_when: false
+
+- name: Get USB device list
+  ansible.builtin.shell:
+    cmd: "lsusb"
+  register: lsusb_output
+  changed_when: false
+
+- name: Install FacetimeHD camera drivers
+  when: lspci_output.stdout is search(pattern=".*Broadcom.*720p FaceTime HD Camera")
+  become: true
+  block:
+    - name: Add facetimehd ppa
+      ansible.builtin.apt_repository:
+        repo: ppa:greg-whiteley/facetimehd
+
+    - name: Install drivers
+      ansible.builtin.apt:
+        name:
+          - facetimehd-dkms
+          - facetimehd-firmware
+        update_cache: yes
+        state: present
+
+- name: Fix swapped tilde key keylayout
+  when: fix_swapped_tilde_key and lsusb_output.stdout is search(pattern=".*05ac:0274 Apple, Inc\. Apple Internal Keyboard")
+  become: true
+  block:
+    - name: Change tilde key position on current boot
+      ansible.builtin.copy:
+        dest: /sys/module/hid_apple/parameters/iso_layout
+        owner: root
+        group: root
+        mode: "0644"
+        unsafe_writes: true # Unsafe write required since copy tries to hardlink with safe writes which can't work into this dir
+        content: |
+          1
+
+    - name: Persist change across reboots
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/hid_apple.conf
+        line: options hid_apple iso_layout=1
+        create: true
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Update initramfs
+
