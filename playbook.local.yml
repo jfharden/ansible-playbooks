@@ -5,6 +5,7 @@
       prompt: "Sudo password"
       private: yes
   roles:
+    - eviljonny-user
     - role: gitdevel-setup
       vars:
         install_visual_git_tools: true

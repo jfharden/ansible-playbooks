@@ -1,6 +1,7 @@
 ---
 - hosts: k8s_control_nodes 
   roles:
+    - eviljonny-user
     - gitdevel-setup
     - bash-config
     - asdf-setup
