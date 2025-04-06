@@ -1,0 +1,30 @@
+- name: Load firmware cmdline
+  ansible.builtin.command:
+    cmd: cat /boot/firmware/cmdline.txt
+  register: boot_firmware_cmdline
+  changed_when: false
+
+- name: Set cgroup_memory option
+  become: true
+  when: boot_firmware_cmdline.stdout is not search("cgroup_memory=1")
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regex: '^(.*)$'
+    line: '\1 cgroup_memory=1'
+    backrefs: true
+  notify:
+    - reboot machine
+
+- name: Set cgroup_enable option
+  become: true
+  when: boot_firmware_cmdline.stdout is not search("cgroup_enable=memory")
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/cmdline.txt
+    regex: '^(.*)$'
+    line: '\1 cgroup_enable=memory'
+    backrefs: true
+  notify:
+    - reboot machine
+
+- name: Reboot
+  ansible.builtin.meta: flush_handlers

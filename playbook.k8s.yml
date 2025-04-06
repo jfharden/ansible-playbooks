@@ -1,11 +1,12 @@
 ---
 - hosts: k8s_control_nodes 
   roles:
-    - eviljonny-user
-    - gitdevel-setup
-    - bash-config
-    - asdf-setup
-    - role: vim-config
-      vars:
-        remove_vim_instant_markdown: true
-    - common-tools
+    # - eviljonny-user
+    # - gitdevel-setup
+    # - bash-config
+    # - asdf-setup
+    # - role: vim-config
+    #   vars:
+    #     remove_vim_instant_markdown: true
+    # - common-tools
+    - k3s
