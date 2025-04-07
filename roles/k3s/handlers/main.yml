@@ -2,3 +2,15 @@
 - name: reboot machine
   become: true
   ansible.builtin.reboot:
+
+- name: Reload keepalived
+  become: true
+  ansible.builtin.service:
+    name: keepalived
+    state: reloaded
+
+- name: Reload haproxy
+  become: true
+  ansible.builtin.service:
+    name: haproxy
+    state: reloaded

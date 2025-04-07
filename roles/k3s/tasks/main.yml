@@ -28,3 +28,11 @@
 
 - name: Reboot
   ansible.builtin.meta: flush_handlers
+
+- name: Setup haproxy
+  include_tasks: ./haproxy.yml
+
+- name: Setup keepalived
+  include_tasks: ./keepalived.yml
+
+- ansible.builtin.meta: flush_handlers

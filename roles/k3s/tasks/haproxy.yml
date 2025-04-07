@@ -1,0 +1,20 @@
+---
+- name: Install haproxy
+  become: true
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Set haproxy config
+  become: true
+  ansible.builtin.blockinfile:
+    dest: /etc/haproxy/haproxy.cfg
+    block: "{{ lookup('template', '../templates/haproxy.cfg') }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK for k3s floating IP"
+    prepend_newline: true
+    backup: true
+    insertafter: EOF
+  notify:
+    - Reload haproxy
