@@ -11,14 +11,12 @@
     k3s_installed_version_on_host: "{{ ( k3s_version_check.stdout_lines[0] | split )[2] if k3s_version_check.rc == 0 else '-1' }}"
 
 - name: Create group of nodes with k3s installed
-  run_once: true
   ansible.builtin.group_by:
     key: "k3s_installed_{{ k3s_installed }}"
   changed_when: false
 
 - name: Set cluster version fact if running on any node
   when: groups.k3s_installed_True is defined
-  run_once: true
   ansible.builtin.set_fact:
     k3s_cluster_version: "{{ hostvars[groups.k3s_installed_True[0]]['k3s_installed_version_on_host'] }}"
     k3s_control_plane_join_node: "{{ hostvars[groups.k3s_installed_True[0]]['ansible_host'] }}"
@@ -26,21 +24,19 @@
 
 - name: Get node token if cluster is already alive
   when: groups.k3s_installed_True is defined and inventory_hostname == groups.k3s_installed_True[0]
-  run_once: true
   become: true
   ansible.builtin.slurp:
     src: /var/lib/rancher/k3s/server/node-token
-  register: k3s_node_token
+  register: k3s_node_token_file
 
 - name: Install k3s on primary
   when: inventory_hostname == "k8s-1" and not k3s_installed
   block:
-    # TODO need to get the secret token
     - name: Install on primary with cluster already alive
       when: k3s_cluster_version is defined
       ansible.builtin.shell:
         curl -sfL https://get.k3s.io |
-          K3S_TOKEN={{ k3s_node_token['content'] | b64decode | trim }}
+          K3S_TOKEN={{ hostvars[groups.k3s_installed_True[0]]['k3s_node_token_file']['content'] | b64decode | trim }}
           INSTALL_K3S_VERSION="{{ k3s_override_version if k3s_override_version is defined else k3s_cluster_version }}"
           INSTALL_K3S_EXEC="server --bind-address {{ ansible_host }}" sh -s -
             --server=https://{{ k3s_control_plane_join_node }}:6443
@@ -95,7 +91,7 @@
       when: k3s_cluster_version is defined
       ansible.builtin.shell:
         curl -sfL https://get.k3s.io |
-          K3S_TOKEN={{ k3s_node_token['content'] | b64decode | trim }}
+          K3S_TOKEN={{ k3s_primary_node_token['content'] | b64decode | trim }}
           INSTALL_K3S_VERSION="{{ k3s_override_version if k3s_override_version is defined else k3s_cluster_version }}"
           INSTALL_K3S_EXEC="server --bind-address {{ ansible_host }}" sh -s -
             --server=https://{{ hostvars['k8s-1']['ansible_host'] }}:6443
