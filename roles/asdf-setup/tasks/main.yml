@@ -91,8 +91,6 @@
     regexp: '^{{ item.key }}'
     line: '{{ item.key }} {{ item.value }}'
   loop: "{{ tool_versions | dict2items }}"
-  notify: 
-    - Run asdf install
 
 - name: Trigger asdf install when updating plugins
   when: asdf_update_plugins
@@ -102,7 +100,6 @@
   changed_when: true
   notify:
     - Update asdf plugins
-    - Run asdf install
 
 - ansible.builtin.meta: flush_handlers
 
