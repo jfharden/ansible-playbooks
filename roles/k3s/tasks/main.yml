@@ -26,6 +26,18 @@
   notify:
     - reboot machine
 
+# This is requird since haproxy wants to bind to the keepalived IP address, but that IP
+# moves between servers, also there's a circular relationship where keepalived will
+# only hold the IP if haproxy is alive, but haproxy cannot be alive when the IP isn'to
+# available to bind
+- name: Allow binding to non-local ip
+  become: true
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    reload: true
+
+
 - name: Reboot
   ansible.builtin.meta: flush_handlers
 
@@ -36,3 +48,6 @@
   include_tasks: ./keepalived.yml
 
 - ansible.builtin.meta: flush_handlers
+
+- name: Setup k3s
+  include_tasks: ./k3s.yml
