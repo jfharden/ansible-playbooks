@@ -4,3 +4,9 @@
   ansible.builtin.apt:
     name: silversearcher-ag
     state: present
+
+- name: Install tree
+  become: true
+  ansible.builtin.apt:
+    name: tree
+    state: present
