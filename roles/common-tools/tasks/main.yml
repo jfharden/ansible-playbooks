@@ -10,3 +10,15 @@
   ansible.builtin.apt:
     name: tree
     state: present
+
+- name: Install 7zip
+  become: true
+  ansible.builtin.apt:
+    name: 7zip
+    state: present
+
+- name: Install rar
+  become: true
+  ansible.builtin.apt:
+    name: rar
+    state: present
