@@ -28,29 +28,3 @@
   loop: "{{ remotes_to_export }}"
   notify:
     - Reload nfs exports
-
-# - name: Ensure nfs root dir exists
-#   ansible.builtin.file:
-#     name: /home/eviljonny/nfs
-#     state: directory
-#     mode: '0755'
-# 
-# - name: Ensure mount dir exists
-#   ansible.builtin.file:
-#     name: "/home/eviljonny/nfs/{{ item.key }}/"
-#     state: directory
-#     mode: '0755'
-#   loop: "{{ remotes_to_mount | dict2items }}"
-# 
-# - name: Configure mounts
-#   become: true
-#   ansible.posix.mount:
-#     src: "{{ item.value.server_ip }}:{{ item.value.server_path }}"
-#     path: "/home/eviljonny/nfs/{{ item.key }}"
-#     opts: "{{ item.value.mode }},user,sync,hard"
-#     boot: false
-#     dump: "0"
-#     state: present
-#     fstype: nfs
-#     backup: true
-#   loop: "{{ remotes_to_mount | dict2items }}"
