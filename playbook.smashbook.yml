@@ -1,0 +1,41 @@
+---
+- hosts: smashbook 
+  roles:
+    - role: nfs-exports
+      vars:
+        remotes_to_export:
+        - path: /mnt/MEDIA_VOL_1/Incoming/Max_Plex_Upload
+          export_to: 192.168.1.0/24
+          anon_uid: 65534
+          anon_gid: 998
+          mode: rw
+        - path: /mnt/MEDIA_VOL_1/Incoming/Jonny_Plex_Upload
+          export_to: 192.168.1.0/24
+          anon_uid: 65534
+          anon_gid: 998
+          mode: rw
+        - path: /mnt/MEDIA_VOL_1/Unorganised
+          export_to: 192.168.1.0/24
+          anon_uid: 65534
+          anon_gid: 998
+          mode: ro
+        - path: /mnt/MEDIA_VOL_1/Unorganised/Upload
+          export_to: 192.168.1.0/24
+          anon_uid: 65534
+          anon_gid: 998
+          mode: rw
+        - path: /mnt/MEDIA_VOL_1/PlexLibrary
+          export_to: 192.168.1.0/24
+          anon_uid: 65534
+          anon_gid: 998
+          mode: ro
+        - path: /mnt/MEDIA_VOL_1/NonPlexMedia
+          export_to: 192.168.1.0/24
+          anon_uid: 65534
+          anon_gid: 998
+          mode: ro
+        - path: /mnt/MEDIA_VOL_1/RetroGames
+          export_to: 192.168.1.0/24
+          anon_uid: 65534
+          anon_gid: 998
+          mode: ro

@@ -1,0 +1,56 @@
+---
+- name: Install nfs-kerner-server
+  become: true
+  ansible.builtin.apt:
+    name: nfs-kernel-server
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  notify:
+    - Reload nfs exports
+
+- name: Enable and start nfs-kernel-server
+  become: true
+  ansible.builtin.service:
+    name: nfs-kernel-server
+    enabled: true
+    state: started
+  notify:
+    - Reload nfs exports
+
+- name: Ensure export configuration exists
+  become: true
+  ansible.builtin.blockinfile:
+    dest: /etc/exports
+    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR {{ item.path }}"
+    content: "{{ item.path }} {{ item.export_to }}({{ item.mode }},sync,no_subtree_check,all_squash,anonuid={{ item.anon_uid }},anongid={{ item.anon_gid }},insecure)"
+    backup: true
+  loop: "{{ remotes_to_export }}"
+  notify:
+    - Reload nfs exports
+
+# - name: Ensure nfs root dir exists
+#   ansible.builtin.file:
+#     name: /home/eviljonny/nfs
+#     state: directory
+#     mode: '0755'
+# 
+# - name: Ensure mount dir exists
+#   ansible.builtin.file:
+#     name: "/home/eviljonny/nfs/{{ item.key }}/"
+#     state: directory
+#     mode: '0755'
+#   loop: "{{ remotes_to_mount | dict2items }}"
+# 
+# - name: Configure mounts
+#   become: true
+#   ansible.posix.mount:
+#     src: "{{ item.value.server_ip }}:{{ item.value.server_path }}"
+#     path: "/home/eviljonny/nfs/{{ item.key }}"
+#     opts: "{{ item.value.mode }},user,sync,hard"
+#     boot: false
+#     dump: "0"
+#     state: present
+#     fstype: nfs
+#     backup: true
+#   loop: "{{ remotes_to_mount | dict2items }}"
