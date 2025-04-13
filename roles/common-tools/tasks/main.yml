@@ -7,6 +7,6 @@
   loop:
     - 7zip
     - pwgen
-    - rar
     - silversearcher-ag
     - tree
+    - unrar

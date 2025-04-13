@@ -1,0 +1,31 @@
+---
+- name: Check if k3s is installed
+  ansible.builtin.command: k3s --version
+  changed_when: false
+  ignore_errors: true
+  register: k3s_version_check
+
+- name: Set the already installed version facts
+  ansible.builtin.set_fact:
+    k3s_installed: "{{ k3s_version_check.rc == 0 }}"
+    k3s_installed_version_on_host: "{{ ( k3s_version_check.stdout_lines[0] | split )[2] if k3s_version_check.rc == 0 else '-1' }}"
+
+- name: "Install k3s on agents"
+  when: not k3s_installed
+  block:
+    - name: Ensure curl is installed
+      become: true
+      ansible.builtin.apt:
+        name: curl
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Install k3s agent
+      become: true
+      ansible.builtin.shell:
+        curl -sfL https://get.k3s.io |
+          K3S_TOKEN={{ hostvars['k8s-1']['k3s_primary_node_token']['content'] | b64decode | trim }}
+          INSTALL_K3S_VERSION="{{ k3s_override_version if k3s_override_version is defined else hostvars['k8s-1']['k3s_cluster_version'] }}"
+          INSTALL_K3S_EXEC="agent --bind-address {{ ansible_host }}" sh -s -
+            --server=https://192.168.1.210:6443

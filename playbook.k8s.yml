@@ -10,3 +10,7 @@
         remove_vim_instant_markdown: true
     - common-tools
     - k3s
+
+- hosts: k8s_agents
+  roles:
+    - k3s-agent
