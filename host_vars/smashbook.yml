@@ -35,3 +35,8 @@ remotes_to_export:
   anon_uid: 65534
   anon_gid: 998
   mode: ro
+- path: /mnt/k8s-array
+  export_to: 192.168.1.200/29
+  anon_uid: 65534
+  anon_gid: 998
+  mode: rw

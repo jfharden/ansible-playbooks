@@ -1,4 +1,5 @@
 ---
 - hosts: smashbook 
   roles:
+    - software-raid
     - nfs-exports

@@ -1,0 +1,57 @@
+---
+- name: Install mdadm
+  become: true
+  ansible.builtin.apt:
+    name: mdadm
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Check if raid device already exists
+  ansible.builtin.stat:
+    path: /dev/md1
+  register: raid_device_exist_check
+
+# We will only try and reconstruct an already built array which just needs
+# assembly
+- name: When the raid device doesn't exist
+  when: not raid_device_exist_check.stat.exists
+  block:
+    - name: Assemble array
+      become: true
+      ansible.builtin.command: mdadm --assemble --name k8s-array
+
+- name: Check the status of the raid array
+  become: true
+  ansible.builtin.command: mdadm --detail /dev/md1 --test
+  failed_when: false
+
+- name: Ensure filesystem is created
+  become: true
+  community.general.filesystem:
+    fstype: ext4
+    dev: /dev/md1
+    state: present
+    force: false
+    resizefs: false
+
+- name: Ensure mount directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/k8s-array
+    state: directory
+    mode: "0755"
+    owner: eviljonny
+    group: eviljonny
+
+- name: Ensure fstab entry exists
+  become: true
+  ansible.posix.mount:
+    path: /mnt/k8s-array
+    src: /dev/md1
+    state: mounted
+    fstype: ext4
+    opts: defaults,rw,nofail,noexec,nosuid,nodev
+    boot: true
+    dump: "0"
+    passno: "1"
