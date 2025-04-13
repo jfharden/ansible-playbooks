@@ -1,24 +1,12 @@
 ---
-- name: Install ag
+- name: "Install Common Tools"
   become: true
   ansible.builtin.apt:
-    name: silversearcher-ag
+    name: "{{ item }}"
     state: present
-
-- name: Install tree
-  become: true
-  ansible.builtin.apt:
-    name: tree
-    state: present
-
-- name: Install 7zip
-  become: true
-  ansible.builtin.apt:
-    name: 7zip
-    state: present
-
-- name: Install rar
-  become: true
-  ansible.builtin.apt:
-    name: rar
-    state: present
+  loop:
+    - 7zip
+    - pwgen
+    - rar
+    - silversearcher-ag
+    - tree
