@@ -28,3 +28,7 @@ remotes_to_mount:
     server_path: /mnt/MEDIA_VOL_1/RetroGames/
     server_ip: 192.168.1.33
     mode: ro
+  Smashbook/k8s-array:
+    server_path: /mnt/k8s-array/
+    server_ip: 192.168.1.33
+    mode: ro
