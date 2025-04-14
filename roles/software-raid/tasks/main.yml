@@ -24,6 +24,7 @@
 - name: Check the status of the raid array
   become: true
   ansible.builtin.command: mdadm --detail /dev/md1 --test
+  changed_when: false
 
 - name: Ensure filesystem is created
   become: true
