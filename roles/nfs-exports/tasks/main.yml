@@ -22,7 +22,7 @@
   become: true
   ansible.builtin.blockinfile:
     dest: /etc/exports
-    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR {{ item.path }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR {{ item.path }} {{ item.export_to }}"
     content: "{{ item.path }} {{ item.export_to }}({{ item.mode }},sync,no_subtree_check,all_squash,anonuid={{ item.anon_uid }},anongid={{ item.anon_gid }},insecure)"
     backup: true
   loop: "{{ remotes_to_export }}"
