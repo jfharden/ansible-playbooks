@@ -1,0 +1,91 @@
+---
+- name: Ensure borgbackup config dir exists
+  become: true
+  ansible.builtin.file:
+    path: /root/borgbackup
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Stat passphrase file
+  become: true
+  ansible.builtin.stat:
+    path: /root/borgbackup/passphrase
+  register: passphrase_stat
+
+- name: Fail if passphrase file doesn't exist
+  ansible.builtin.fail:
+    msg: The passphrase file /root/borgbackup/passphrase does not exist. You need to create it containing the passphrase used for the borgbackup repokey
+  when: not passphrase_stat.stat.exists
+
+- name: Ensure correct permissions for passphrase
+  become: true
+  ansible.builtin.file:
+    path: /root/borgbackup/passphrase
+    owner: root
+    group: root
+    mode: "0600"
+    state: file
+
+- name: Stat username file
+  become: true
+  ansible.builtin.stat:
+    path: /root/borgbackup/hetzner_username
+  register: username_stat
+
+- name: Fail if username file doesn't exist
+  ansible.builtin.fail:
+    msg: The username file /root/borgbackup/hetzner_username does not exist. You need to create it containing the hetzner username used for the storagebox
+  when: not username_stat.stat.exists
+
+- name: Ensure correct permissions for username
+  become: true
+  ansible.builtin.file:
+    path: /root/borgbackup/hetzner_username
+    owner: root
+    group: root
+    mode: "0600"
+    state: file
+
+- name: Install borgbackup
+  become: true
+  ansible.builtin.apt:
+    name: borgbackup
+    state: present
+
+- name: Copy borg_env.sh file
+  become: true
+  ansible.builtin.copy:
+    src: ../files/borg_env.sh
+    dest: /root/borgbackup/borg_env.sh
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Copy perform_backup.sh file
+  become: true
+  ansible.builtin.copy:
+    src: ../files/perform_backup.sh
+    dest: /root/borgbackup/perform_backup.sh
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Copy init_repo.sh file
+  become: true
+  ansible.builtin.copy:
+    src: ../files/init_repo.sh
+    dest: /root/borgbackup/init_repo.sh
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Copy export_repo_key.sh file
+  become: true
+  ansible.builtin.copy:
+    src: ../files/export_repo_key.sh
+    dest: /root/borgbackup/export_repo_key.sh
+    owner: root
+    group: root
+    mode: "0700"

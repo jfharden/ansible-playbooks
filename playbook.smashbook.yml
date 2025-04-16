@@ -3,3 +3,4 @@
   roles:
     - software-raid
     - nfs-exports
+    - borgbackup
