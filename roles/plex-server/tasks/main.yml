@@ -1,0 +1,61 @@
+- name: Add plex gpg apt-key
+  become: true
+  ansible.builtin.apt_key:
+    id: CD665CBA0E2F88B7373F7CB997203C7B3ADCA79D
+    url: https://downloads.plex.tv/plex-keys/PlexSign.key
+    keyring: /etc/apt/trusted.gpg.d/plex-sign.gpg
+
+- name: Add plex apt repo
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/plexmediaserver.gpg] https://downloads.plex.tv/repo/deb public main"
+    filename: plexmediaserver.list
+    state: present
+    update_cache: true
+
+- name: Install early packages
+  become: true
+  ansible.builtin.apt:
+    name: python3-psutil
+    state: present
+
+- name: Checkout git repos
+  ansible.builtin.include_role:
+    name: git-repos
+  vars:
+    repos_to_clone:
+      - url: git@github.com:jfharden/rip-scripts.git
+        dir: ~/gitdevel/github.com/jfharden/rip-scripts
+        symlink:
+          from: ~/handbrake-scripts
+          to: handbrake-scripts
+        ref: main
+
+- name: Set remote-access settings - network-interface
+  community.general.dconf:
+    key: "/org/gnome/desktop/remote-access/network-interface"
+    value: "'lo'"
+    state: present
+
+- name: Set remote-access settings - require-encryption
+  community.general.dconf:
+    key: "/org/gnome/desktop/remote-access/require-encryption"
+    value: "false"
+    state: present
+
+- name: Install apt packages
+  loop:
+    - vino
+    - openssh-server
+    - gddrescue
+    - lm-sensors
+    - hddtemp
+    - p7zip-full
+    - beignet-opencl-icd
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+
+- name: Install plex media server
+  ansible.builtin.apt:
+    name: plexmediaserver
+    state: present

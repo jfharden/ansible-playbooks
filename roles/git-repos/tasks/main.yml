@@ -1,0 +1,18 @@
+- name: Checkout vimconfig repo
+  loop: "{{ repos_to_clone }}"
+  ansible.builtin.git:
+    repo: "{{ item.url }}"
+    dest: "{{ item.dir }}"
+    accept_hostkey: true
+    force: false
+    update: false
+    version: "{{ item.ref }}"
+
+- name: Symlink to checkout
+  loop: "{{ repos_to_clone }}"
+  when: item.symlink is defined
+  ansible.builtin.file:
+    src: "{{ item.dir }}/{{ item.symlink.to }}"
+    dest: "{{ item.symlink.from }}"
+    state: link
+

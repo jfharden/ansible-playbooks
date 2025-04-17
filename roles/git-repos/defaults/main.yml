@@ -1,0 +1,6 @@
+---
+repos_to_clone:
+  # - url: git@github.com:jfharden/foo.git
+  #   dir: gitdevel/github.com/jfharden/foo
+  #   symlink: ~/.foo
+  #   ref: master
