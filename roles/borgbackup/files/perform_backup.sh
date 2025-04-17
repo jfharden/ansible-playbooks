@@ -43,17 +43,18 @@ borg prune                          \
 
 prune_exit=$?
 
-# actually free repo disk space by compacting segments
-
-info "Compacting repository"
-
-borg compact
-
-compact_exit=$?
+### While we are stuck with borg 1.1 there is no compact
+### # actually free repo disk space by compacting segments
+### 
+### info "Compacting repository"
+### 
+### borg compact
+### 
+### compact_exit=$?
 
 # use highest exit code as global exit code
 global_exit=$(( backup_exit > prune_exit ? backup_exit : prune_exit ))
-global_exit=$(( compact_exit > global_exit ? compact_exit : global_exit ))
+### global_exit=$(( compact_exit > global_exit ? compact_exit : global_exit ))
 
 if [ ${global_exit} -eq 0 ]; then
     info "Backup, Prune, and Compact finished successfully"
