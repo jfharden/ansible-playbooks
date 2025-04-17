@@ -89,3 +89,18 @@
     owner: root
     group: root
     mode: "0700"
+
+- name: Set up cron to backup daily
+  become: true
+  ansible.builtin.cron:
+    name: Daily borgbackup
+    cron_file: /etc/cron.d/borgbackup
+    disabled: false
+    minute: "0"
+    hour: "2"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    job: cd /root/borgbackup && ./perform_backup.sh
+    state: present
+    user: root
