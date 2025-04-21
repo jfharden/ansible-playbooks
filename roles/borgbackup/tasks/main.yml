@@ -54,41 +54,21 @@
     name: borgbackup
     state: present
 
-- name: Copy borg_env.sh file
+- name: Copy scripts
   become: true
   ansible.builtin.copy:
-    src: ../files/borg_env.sh
-    dest: /root/borgbackup/borg_env.sh
+    src: "../files/{{ item }}"
+    dest: "/root/borgbackup/{{ item }}"
     owner: root
     group: root
     mode: "0700"
-
-- name: Copy perform_backup.sh file
-  become: true
-  ansible.builtin.copy:
-    src: ../files/perform_backup.sh
-    dest: /root/borgbackup/perform_backup.sh
-    owner: root
-    group: root
-    mode: "0700"
-
-- name: Copy init_repo.sh file
-  become: true
-  ansible.builtin.copy:
-    src: ../files/init_repo.sh
-    dest: /root/borgbackup/init_repo.sh
-    owner: root
-    group: root
-    mode: "0700"
-
-- name: Copy export_repo_key.sh file
-  become: true
-  ansible.builtin.copy:
-    src: ../files/export_repo_key.sh
-    dest: /root/borgbackup/export_repo_key.sh
-    owner: root
-    group: root
-    mode: "0700"
+  loop:
+    - borg_env.sh
+    - perform_backup.sh
+    - init_repo.sh
+    - export_repo_key.sh
+    - send_success_notice.sh
+    - send_failure_notice.sh
 
 - name: Set up cron to backup daily
   become: true
@@ -101,6 +81,6 @@
     day: "*"
     month: "*"
     weekday: "*"
-    job: cd /root/borgbackup && ./perform_backup.sh
+    job: cd /root/borgbackup && ((./perform_backup.sh && ./send_success_notice.sh) || ./send_failure_notice.sh)
     state: present
     user: root
