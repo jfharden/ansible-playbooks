@@ -23,3 +23,13 @@
     - apple-hardware
     - common-desktop
     - home-nfs-client
+
+- hosts: k8s-1
+  tasks:
+    - include_role:
+        name: kubectl
+        tasks_from: gather_config_vars
+
+- hosts: local
+  roles:
+    - kubectl

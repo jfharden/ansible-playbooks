@@ -1,0 +1,9 @@
+- name: Get kubectl config
+  become: true
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: remote_k3s_config
+
+    # - ansible.builtin.debug:
+    #     msg: "{{ ( hostvars['k8s-1']['remote_k3s_config'].content | b64decode | from_yaml )['clusters'][0]['cluster']['certificate-authority-data'] }}"
+    #       # var: ( hostvars['k8s-1']['remote_k3s_config'].content | b64decode | from_yaml )['clusters'][0]['cluster']['certificate-authority-data']

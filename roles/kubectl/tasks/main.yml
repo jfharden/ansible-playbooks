@@ -1,0 +1,79 @@
+- name: Install depdencies
+  become: true
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+    update_cache: yes
+    state: present
+
+- name: Check to see if kubernetes keyring is installed
+  ansible.builtin.stat:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  register: k8s_keyring_stat
+
+- name: Copy kubernetes keyring key
+  become: true
+  ansible.builtin.get_url:
+    url: https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.key
+  register: k8s_keyring
+
+- name: Dearmour ansible keyring key
+  when: k8s_keyring.changed or not k8s_keyring_stat.stat.exists 
+  become: true
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /etc/apt/keyrings/kubernetes-apt-keyring.key
+
+- name: Change permissions on k8s keyring key
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Add k8s repository into sources list
+  become: true
+  ansible.builtin.apt_repository:
+    repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /'
+    state: present
+    filename: kubernetes
+
+- name: Install depdencies
+  become: true
+  ansible.builtin.apt:
+    name:
+      - kubectl
+    update_cache: yes
+    state: present
+
+- name: Ensure kube dir
+  ansible.builtin.file:
+    path: $HOME/.kube
+    state: directory
+    owner: eviljonny
+    group: eviljonny
+    mode: '0700'
+
+- name: Write kubectl config file
+  ansible.builtin.template:
+    src: kubeconfig.yml
+    dest: $HOME/.kube/pik8s.yaml
+    owner: eviljonny
+    group: eviljonny
+    mode: '0600'
+  vars:
+    cluster_certificate_authority_data: "{{ ( hostvars['k8s-1']['remote_k3s_config'].content | b64decode | from_yaml )['clusters'][0]['cluster']['certificate-authority-data'] }}"
+    client_certificate_data: "{{ ( hostvars['k8s-1']['remote_k3s_config'].content | b64decode | from_yaml )['users'][0]['user']['client-certificate-data'] }}"
+    client_key_data: "{{ ( hostvars['k8s-1']['remote_k3s_config'].content | b64decode | from_yaml )['users'][0]['user']['client-key-data'] }}"
+
+- name: Copy pik8s kubeconfig file
+  ansible.builtin.copy:
+    src: "../files/pik8s.sh"
+    dest: "$HOME/.kube/pik8s.sh"
+    owner: eviljonny
+    group: eviljonny
+    mode: "0600"
