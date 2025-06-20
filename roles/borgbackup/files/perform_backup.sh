@@ -12,8 +12,6 @@ info "Starting backup"
 # the machine this script is currently running on:
 
 borg create                                  \
-    --verbose                                \
-    --list                                   \
     --stats                                  \
     --show-rc                                \
     --compression lz4                        \
