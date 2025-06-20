@@ -13,5 +13,5 @@ Server Backup with Borg Backup
 $(/usr/games/cowsay -f sheep "Borg Backup complete, resistance was futile!")
 </pre>
 </div>
-" | sendmail jfharden+borgbackupstatus@gmail.com
+" | /usr/sbin/sendmail jfharden+borgbackupstatus@gmail.com
 

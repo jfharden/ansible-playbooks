@@ -13,5 +13,5 @@ Failed to backup with Borg Backup
 $(/usr/games/cowsay -f flaming-sheep "Oh noes! Everything is burning, backup failed!!!")
 </pre>
 </div>
-" | sendmail jfharden+borgbackupstatus@gmail.com
+" | /usr/sbin/sendmail jfharden+borgbackupstatus@gmail.com
 
