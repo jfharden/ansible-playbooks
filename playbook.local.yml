@@ -16,7 +16,10 @@
           shellcheck: "0.10.0"
     - validate-local-configured 
     - vim-config
-    - common-tools
+    - role: common-tools
+      vars:
+        additional_packages:
+          - vinagre
     - apple-hardware
     - common-desktop
     - home-nfs-client

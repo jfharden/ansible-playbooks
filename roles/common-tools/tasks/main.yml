@@ -11,3 +11,11 @@
     - silversearcher-ag
     - tree
     - unrar
+
+- name: Install additional packages
+  become: true
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ additional_packages }}"
