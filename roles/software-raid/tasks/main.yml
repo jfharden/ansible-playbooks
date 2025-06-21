@@ -9,7 +9,7 @@
 
 - name: Check if raid device already exists
   ansible.builtin.stat:
-    path: /dev/md1
+    path: /dev/md/k8s-array
   register: raid_device_exist_check
 
 # We will only try and reconstruct an already built array which just needs
@@ -23,14 +23,14 @@
 
 - name: Check the status of the raid array
   become: true
-  ansible.builtin.command: mdadm --detail /dev/md1 --test
+  ansible.builtin.command: mdadm --detail /dev/md/k8s-array --test
   changed_when: false
 
 - name: Ensure filesystem is created
   become: true
   community.general.filesystem:
     fstype: ext4
-    dev: /dev/md1
+    dev: /dev/md/k8s-array
     state: present
     force: false
     resizefs: false
@@ -48,7 +48,7 @@
   become: true
   ansible.posix.mount:
     path: /mnt/k8s-array
-    src: /dev/md1
+    src: /dev/md/k8s-array
     state: mounted
     fstype: ext4
     opts: defaults,rw,nofail,noexec,nosuid,nodev
