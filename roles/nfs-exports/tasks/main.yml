@@ -9,6 +9,17 @@
   notify:
     - Reload nfs exports
 
+- name: Create any directories needed on local disk
+  become: true
+  when: "{{ item.create_dir }}"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "0770"
+    owner: "{{ item.create_as_user }}"
+    group: "{{ item.create_as_group }}"
+  loop: "{{ remotes_to_export }}"
+
 - name: Enable and start nfs-kernel-server
   become: true
   ansible.builtin.service:

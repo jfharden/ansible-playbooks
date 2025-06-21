@@ -1,6 +1,7 @@
 ---
 - hosts: smashbook 
   roles:
+    - postgres-user-and-group
     - software-raid
     - nfs-exports
     - borgbackup

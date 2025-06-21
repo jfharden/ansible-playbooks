@@ -1,0 +1,18 @@
+- name: Ensure postgres group exists with id 70
+  become: true
+  ansible.builtin.group:
+    name: postgres
+    state: present
+    gid: 70
+
+- name: Add postgres user with id 70
+  become: true
+  ansible.builtin.user:
+    name: postgres
+    comment: Postgres user in use by clients with NFS mounts
+    uid: 70
+    group: postgres
+    shell: /usr/sbin/nologin
+    create_home: false
+    home: /nonexistent
+

@@ -5,53 +5,56 @@ remotes_to_export:
   anon_uid: 65534
   anon_gid: 998
   mode: rw
+  create_dir: false
 - path: /mnt/MEDIA_VOL_1/Incoming/Jonny_Plex_Upload
   export_to: 192.168.1.0/24
   anon_uid: 65534
   anon_gid: 998
   mode: rw
+  create_dir: false
 - path: /mnt/MEDIA_VOL_1/Unorganised
   export_to: 192.168.1.0/24
   anon_uid: 65534
   anon_gid: 998
   mode: ro
+  create_dir: false
 - path: /mnt/MEDIA_VOL_1/Unorganised/Upload
   export_to: 192.168.1.0/24
   anon_uid: 65534
   anon_gid: 998
   mode: rw
+  create_dir: false
 - path: /mnt/MEDIA_VOL_1/PlexLibrary
   export_to: 192.168.1.0/24
   anon_uid: 65534
   anon_gid: 998
   mode: ro
+  create_dir: false
 - path: /mnt/MEDIA_VOL_1/NonPlexMedia
   export_to: 192.168.1.0/24
   anon_uid: 65534
   anon_gid: 998
   mode: ro
+  create_dir: false
 - path: /mnt/MEDIA_VOL_1/RetroGames
   export_to: 192.168.1.0/24
   anon_uid: 65534
   anon_gid: 998
   mode: ro
-- path: /mnt/k8s-array
-  export_to: 192.168.1.200/29
-  anon_uid: 65534
-  anon_gid: 1000
-  mode: rw
+  create_dir: false
 - path: /mnt/k8s-array/comicdb-postgres-data/
   export_to: 192.168.1.200/29
-  anon_uid: 65534
-  anon_gid: 1000
+  anon_uid: 70
+  anon_gid: 70
   mode: rw
-- path: /mnt/k8s-array
+  create_dir: true
+  create_as_user: postgres
+  create_as_group: postgres
+- path: /mnt/k8s-array/comicdb-postgres-data/
   export_to: 192.168.1.33/32
-  anon_uid: 65534
-  anon_gid: 1000
+  anon_uid: 70
+  anon_gid: 70
   mode: rw
-- path: /mnt/k8s-array
-  export_to: 192.168.1.55/32
-  anon_uid: 65534
-  anon_gid: 1000
-  mode: ro
+  create_dir: true
+  create_as_user: postgres
+  create_as_group: postgres
