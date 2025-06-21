@@ -19,10 +19,12 @@
     - role: common-tools
       vars:
         additional_packages:
+          - bash-completion
           - vinagre
     - apple-hardware
     - common-desktop
     - home-nfs-client
+    - docker
 
 - hosts: k8s-1
   tasks:
