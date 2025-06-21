@@ -14,6 +14,15 @@
     path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
   register: k8s_keyring_stat
 
+- name: Ensure keyrings directory exists
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/
+    mode: '0755'
+    state: directory
+    owner: root
+    group: root
+
 - name: Copy kubernetes keyring key
   become: true
   ansible.builtin.get_url:
