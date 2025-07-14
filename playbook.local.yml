@@ -25,6 +25,7 @@
     - common-desktop
     - home-nfs-client
     - docker
+    - helm
 
 - hosts: k8s-1
   tasks:

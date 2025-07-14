@@ -1,0 +1,49 @@
+- name: Check to see if helm keyring is installed
+  ansible.builtin.stat:
+    path: /etc/apt/keyrings/helm-apt-keyring.gpg
+  register: helm_keyring_stat
+
+- name: Ensure keyrings directory exists
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/
+    mode: '0755'
+    state: directory
+    owner: root
+    group: root
+
+- name: Copy helm keyring key
+  become: true
+  ansible.builtin.get_url:
+    url: https://baltocdn.com/helm/signing.asc
+    dest: /etc/apt/keyrings/helm-apt-keyring.asc
+  register: helm_keyring
+
+- name: Dearmour ansible keyring key
+  when: helm_keyring.changed or not helm_keyring_stat.stat.exists 
+  become: true
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /etc/apt/keyrings/helm-apt-keyring.gpg /etc/apt/keyrings/helm-apt-keyring.asc
+
+- name: Change permissions on helm keyring key
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/helm-apt-keyring.gpg
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Add helm repository into sources list
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }} signed-by=/etc/apt/keyrings/helm-apt-keyring.gpg] https://baltocdn.com/helm/stable/debian/ all main"
+    state: present
+    filename: helm
+
+- name: Install helm
+  become: true
+  ansible.builtin.apt:
+    name:
+      - helm
+    update_cache: yes
+    state: present
