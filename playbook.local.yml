@@ -5,6 +5,9 @@
     - role: gitdevel-setup
       vars:
         install_visual_git_tools: true
+    - role: vim-config
+      vars:
+          remove_vim_instant_markdown: true
     - bash-config
     - role: asdf-setup
       vars:
@@ -15,7 +18,6 @@
           nodejs: "22.14.0"
           shellcheck: "0.10.0"
     - validate-local-configured 
-    - vim-config
     - role: common-tools
       vars:
         additional_packages:

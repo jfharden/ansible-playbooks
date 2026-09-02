@@ -1,76 +1,173 @@
 ---
-- name: Create bitbucket.org/eviljonny/vimconfig directory
-  ansible.builtin.file:
-    path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig
-    state: directory
-    owner: eviljonny
-    group: eviljonny
-    mode: 0700
-
-- name: Symlink .vim to git dir
-  ansible.builtin.file:
-    src: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/
-    dest: /home/eviljonny/.vim
-    owner: eviljonny
-    group: eviljonny
-    state: link
-    force: true
-  
-- name: Checkout vimconfig repo
-  ansible.builtin.git:
-    repo: git@bitbucket.org:eviljonny/vimconfig.git
-    dest: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/
-    accept_hostkey: true
-    force: false
-    update: false
-    version: migrate-to-coc
-
-- name: vim is installed
-  become: true
-  ansible.builtin.apt:
-    name: vim
-    state: present
-
-- name: ctags is installed
-  become: true
-  ansible.builtin.apt:
-    name: exuberant-ctags
-    state: present
-
-- name: Disable vim-instant-markdown
-  when: remove_vim_instant_markdown
+- name: install plain vim
+  when: ansible_distribution_version == "20.04"
   block:
-    - name: Comment out Plug install
-      ansible.builtin.replace:
-        path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/vimrc
-        regexp: "^(Plug 'instant-markdown/vim-instant-markdown.*)$"
-        replace: '" \1'
-
-    - name: Ensure vim-instant-markdown dir does not exist
+    - name: Create bitbucket.org/eviljonny/vimconfig directory
       ansible.builtin.file:
-        path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/plugged/vim-instant-markdown
-        state: absent
+        path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig
+        state: directory
+        owner: eviljonny
+        group: eviljonny
+        mode: 0700
 
-- name: Install vim-instant-markdown dependencies
-  when: not remove_vim_instant_markdown
+    - name: Symlink .vim to git dir
+      ansible.builtin.file:
+        src: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/
+        dest: /home/eviljonny/.vim
+        owner: eviljonny
+        group: eviljonny
+        state: link
+        force: true
+
+    - name: Checkout vimconfig repo
+      ansible.builtin.git:
+        repo: git@bitbucket.org:eviljonny/vimconfig.git
+        dest: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/
+        accept_hostkey: true
+        force: false
+        update: false
+        version: migrate-to-coc
+
+    - name: vim is installed
+      become: true
+      ansible.builtin.apt:
+        name: vim
+        state: present
+
+    - name: ctags is installed
+      become: true
+      ansible.builtin.apt:
+        name: exuberant-ctags
+        state: present
+
+    - name: Disable vim-instant-markdown
+      when: remove_vim_instant_markdown
+      block:
+        - name: Comment out Plug install
+          ansible.builtin.replace:
+            path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/vimrc
+            regexp: "^(Plug 'instant-markdown/vim-instant-markdown.*)$"
+            replace: '" \1'
+
+        - name: Ensure vim-instant-markdown dir does not exist
+          ansible.builtin.file:
+            path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/plugged/vim-instant-markdown
+            state: absent
+
+    - name: Install vim-instant-markdown dependencies
+      when: not remove_vim_instant_markdown
+      block:
+      - name: install linux dependencies
+        when: ansible_system == "Linux"
+        block:
+        - name: Install xdg-utils
+          become: true
+          ansible.builtin.apt:
+            name: xdg-utils
+            state: present
+
+        - name: Install curl
+          become: true
+          ansible.builtin.apt:
+            name: curl
+            state: present
+
+        - name: Install instant-markdown-d
+          community.general.npm:
+            executable: /home/eviljonny/.asdf/shims/npm
+            name: instant-markdown-d
+            global: true
+
+- name: install neovim
+  when: ansible_distribution_version != "20.04"
   block:
-  - name: install linux dependencies
-    when: ansible_system == "Linux"
-    block:
-    - name: Install xdg-utils
-      become: true
-      ansible.builtin.apt:
-        name: xdg-utils
-        state: present
+    - name: Create /home/eviljonny/gitdevel/github.com/jfharden/kickstart.nvim/
+      ansible.builtin.file:
+        path: /home/eviljonny/gitdevel/github.com/jfharden/kickstart.nvim
+        state: directory
+        owner: eviljonny
+        group: eviljonny
+        mode: 0700
 
-    - name: Install curl
-      become: true
-      ansible.builtin.apt:
-        name: curl
-        state: present
+    - name: Symlink .config/nvim to git dir
+      ansible.builtin.file:
+        src: /home/eviljonny/gitdevel/github.com/jfharden/kickstart.nvim
+        dest: /home/eviljonny/.config/nvim
+        owner: eviljonny
+        group: eviljonny
+        state: link
+        force: true
 
-    - name: Install instant-markdown-d
-      community.general.npm:
-        executable: /home/eviljonny/.asdf/shims/npm
-        name: instant-markdown-d
-        global: true
+    - name: Checkout kickstart config
+      ansible.builtin.git:
+        repo: git@github.com:jfharden/kickstart.nvim.git
+        dest: /home/eviljonny/gitdevel/github.com/jfharden/kickstart.nvim
+        accept_hostkey: true
+        force: false
+        update: false
+
+    - name: neovim is installed
+      become: true
+      block:
+        - name: Neovim ppa is added
+          ansible.builtin.apt_repository:
+            repo: ppa:neovim-ppa/stable
+
+        - name: Neovim apt package is installed
+          ansible.builtin.apt:
+            name: neovim
+            update_cache: yes
+            state: present
+
+    - name: neovim kickstart dependencies are installed
+      block:
+        - name: fd, ripgrep are installed
+          become: true
+          ansible.builtin.apt:
+            name:
+              - fd-find
+              - ripgrep
+            state: present
+
+    - name: tree-sitter-cli is installed
+      when: ansible_distribution_version != "20.04"
+      block:
+        - name: Ensure home bin exists
+          ansible.builtin.file:
+            path: /home/eviljonny/bin
+            state: directory
+            mode: '0755'
+
+        - name: Check if tree-sitter-cli binary exists
+          ansible.builtin.stat:
+            path: /home/eviljonny/bin/tree-sitter-cli
+          register: tree_sitter_cli_binary_stat
+
+        - name: tree-sitter-cli binary is installed
+          when: not tree_sitter_cli_binary_stat.stat.exists
+          block:
+            - name: Get tree-sitter-cli latest release information
+              ansible.builtin.uri:
+                url: https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest
+                return_content: true
+              register: tree_sitter_cli_latest_release_json
+
+            - name: Set tree_sitter_cli facts
+              ansible.builtin.set_fact:
+                tree_sitter_cli_zip_name: "{{ tree_sitter_cli_release_json.name }}"
+                tree_sitter_cli_zip_url: "{{ tree_sitter_cli_release_json.browser_download_url }}"
+              vars:
+                tree_sitter_cli_binary_arch: "{{ 'x64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
+                tree_sitter_cli_platform: "{{ ansible_system | lower }}"
+                tree_sitter_cli_release_json: "{{ tree_sitter_cli_latest_release_json.json | community.general.json_query('assets[?contains(name, `tree-sitter-cli-' + tree_sitter_cli_platform + '-' + tree_sitter_cli_binary_arch +'`) && ends_with(name, `gz`)] | [0]') }}"
+
+            - name: Download tree_sitter_cli release archive
+              ansible.builtin.get_url:
+                url: "{{ tree_sitter_cli_zip_url }}"
+                dest: "/tmp/{{ tree_sitter_cli_zip_name }}"
+
+            - name: Copy tree_sitter_cli binary into homedir
+              ansible.builtin.unarchive:
+                src: "/tmp/{{ tree_sitter_cli_zip_name }}"
+                remote_src: true
+                dest: /home/eviljonny/bin/
