@@ -1,3 +1,4 @@
+---
 - name: Check to see if helm keyring is installed
   ansible.builtin.stat:
     path: /etc/apt/keyrings/helm-apt-keyring.gpg
@@ -15,9 +16,15 @@
 - name: Copy helm keyring key
   become: true
   ansible.builtin.get_url:
-    url: https://baltocdn.com/helm/signing.asc
+    url: https://packages.buildkite.com/helm-linux/helm-debian/gpgkey
     dest: /etc/apt/keyrings/helm-apt-keyring.asc
   register: helm_keyring
+
+- name: Verify helm GPG key id
+  ansible.builtin.shell: |
+    test $(gpg --show-keys --with-colons /tmp/helm.gpg | awk -F: '$1 == "fpr" {print $10}' | head -n 1) == "DDF78C3E6EBB2D2CC223C95C62BA89D07698DBC6"
+  args:
+    executable: /bin/bash
 
 - name: Dearmour ansible keyring key
   when: helm_keyring.changed or not helm_keyring_stat.stat.exists 
@@ -36,7 +43,7 @@
 - name: Add helm repository into sources list
   become: true
   ansible.builtin.apt_repository:
-    repo: "deb [arch={{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }} signed-by=/etc/apt/keyrings/helm-apt-keyring.gpg] https://baltocdn.com/helm/stable/debian/ all main"
+    repo: "deb [signed-by=/etc/apt/keyrings/helm-apt-keyring.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main"
     state: present
     filename: helm
 
