@@ -1,0 +1,173 @@
+- name: Checkout git repos
+  ansible.builtin.include_role:
+    name: git-repos
+  vars:
+    repos_to_clone:
+      - url: git@github.com:jfharden/ansible-private.git
+        dir: ~/gitdevel/github.com/jfharden/ansible-private
+        ref: main
+
+- name: Install wine
+  become: true
+  ansible.builtin.apt:
+    name: wine
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install 32bit libusb
+  become: true
+  ansible.builtin.apt:
+    name: libusb-1.0-0:i386
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install libudev
+  become: true
+  ansible.builtin.apt:
+    name: libudev1:i386
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Check for wine 32 bit install
+  ansible.builtin.stat:
+    path: /home/eviljonny/.wine32/drive_c/windows/notepad.exe
+  register: wine32_stat
+
+- name: Create wine 32 bit prefix
+  when: not wine32_stat.stat.exists
+  ansible.builtin.shell: WINEPREFIX="$HOME/.wine32" WINEARCH="win32" wine wineboot
+
+- name: Ensure wine drive_d directory exists
+  ansible.builtin.file:
+    path: /home/eviljonny/.wine32/drive_d
+    state: directory
+    owner: eviljonny
+    group: eviljonny
+    mode: 0775
+
+- name: Ensure symlink to drive_d exists in dosdevices
+  ansible.builtin.file:
+    src: /home/eviljonny/.wine32/drive_d
+    dest: "/home/eviljonny/.wine32/dosdevices/d:"
+    state: link
+
+- name: Check for xgpro install
+  ansible.builtin.stat:
+    path: /home/eviljonny/.wine32/drive_d/Xgpro/Xgpro.exe
+  register: xgpro_stat
+
+- name: Install XGPro
+  when: not xgpro_stat.stat.exists
+  ansible.builtin.shell: WINEPREFIX="$HOME/.wine32" wine ~/gitdevel/github.com/jfharden/ansible-private/TL866ii-plus/programmer-10-51.exe
+
+- name: Install driver dll
+  ansible.builtin.copy: 
+    src: /home/eviljonny/gitdevel/github.com/jfharden/ansible-private/TL866ii-plus/setupapi.dll
+    dest: /home/eviljonny/.wine32/dosdevices/d:/Xgpro/setupapi.dll
+
+- name: Install udev rules 60-minipro.rules
+  become: true
+  ansible.builtin.copy:
+    content: |
+      ##
+      ## This file is part of Minipro project.
+      ##
+      ## Minipro is free software; you can redistribute it and/or modify
+      ## it under the terms of the GNU General Public License as published by
+      ## the Free Software Foundation; either version 3 of the License, or
+      ## (at your option) any later version.
+      ##
+      ## Minipro is distributed in the hope that it will be useful,
+      ## but WITHOUT ANY WARRANTY; without even the implied warranty of
+      ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      ## GNU General Public License for more details.
+
+      # These rules do not grant any permission by itself, but flag devices
+      # supported by Minipro.
+      # The access policies are stored in following files:
+      # * 61-minipro-plugdev.rules
+      # * 61-minipro-uaccess.rules
+
+      ACTION!="add|change", GOTO="minipro_rules_end"
+      SUBSYSTEM!="usb", GOTO="minipro_rules_end"
+
+      # TL866A/CS
+      ATTRS{idVendor}=="04d8", ATTRS{idProduct}=="e11c", ENV{ID_MINIPRO}="1"
+
+      # TL866II+, T48, T56
+      ATTRS{idVendor}=="a466", ATTRS{idProduct}=="0a53", ENV{ID_MINIPRO}="1"
+
+      # T76
+      ATTRS{idVendor}=="a466", ATTRS{idProduct}=="1a86", ENV{ID_MINIPRO}="1"
+
+      LABEL="minipro_rules_end"
+    dest: /etc/udev/rules.d/60-minipro.rules
+    mode: 0644
+  notify: Reload udev rules
+
+- name: Install udev rules 61-minipro-plugdev.rules
+  become: true
+  ansible.builtin.copy:
+    content: |
+      ## This file is part of Minipro project.
+      ##
+      ## Minipro is free software; you can redistribute it and/or modify
+      ## it under the terms of the GNU General Public License as published by
+      ## the Free Software Foundation; either version 3 of the License, or
+      ## (at your option) any later version.
+      ##
+      ## Minipro is distributed in the hope that it will be useful,
+      ## but WITHOUT ANY WARRANTY; without even the implied warranty of
+      ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      ## GNU General Public License for more details.
+
+      ACTION!="add|change", GOTO="minipro_rules_plugdev_end"
+      ENV{ID_MINIPRO}=="1", MODE="660", GROUP="plugdev"
+      LABEL="minipro_rules_plugdev_end"
+    dest: /etc/udev/rules.d/61-minipro-plugdev.rules
+    mode: 0644
+  notify: Reload udev rules
+
+- name: Install udev rules 61-minipro-uaccess.rules
+  become: true
+  ansible.builtin.copy:
+    content: |
+      ## This file is part of Minipro project.
+      ##
+      ## Minipro is free software; you can redistribute it and/or modify
+      ## it under the terms of the GNU General Public License as published by
+      ## the Free Software Foundation; either version 3 of the License, or
+      ## (at your option) any later version.
+      ##
+      ## Minipro is distributed in the hope that it will be useful,
+      ## but WITHOUT ANY WARRANTY; without even the implied warranty of
+      ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      ## GNU General Public License for more details.
+      
+      ACTION!="add|change", GOTO="minipro_rules_uaccess_end"
+      ENV{ID_MINIPRO}=="1", TAG+="uaccess"
+      LABEL="minipro_rules_uaccess_end"
+    dest: /etc/udev/rules.d/61-minipro-uaccess.rules
+    mode: 0644
+  notify: Reload udev rules
+
+- name: Create xgpro execution script in ~/bin
+  ansible.builtin.copy:
+    content: |
+      #!/usr/bin/env bash
+
+      if [ "$1" == "--help" ] || [ "$1" == "-h" ] || [ "$1" == "help" ]; then
+        echo "$0 [--debug]"
+        exit 0
+      fi
+
+      if [ "$1" == "--debug" ]; then
+        export TL_DEBUG=1
+      fi
+
+      WINEPREFIX="$HOME/.wine32" wine "$HOME/.wine32/dosdevices/d:/Xgpro/Xgpro.exe"
+    dest: /home/eviljonny/bin/xgpro
+    mode: 0744

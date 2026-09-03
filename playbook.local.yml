@@ -23,6 +23,7 @@
         additional_packages:
           - bash-completion
           - vinagre
+          - v4l-utils
     - apple-hardware
     - common-desktop
     - home-nfs-client
