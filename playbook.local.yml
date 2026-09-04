@@ -7,23 +7,43 @@
         install_visual_git_tools: true
     - role: vim-config
       vars:
-          remove_vim_instant_markdown: true
+        remove_vim_instant_markdown: true
     - bash-config
-    - role: asdf-setup
-      vars:
-        plugins_to_install:
-          - nodejs
-          - shellcheck
-        tool_versions:
-          nodejs: "22.14.0"
-          shellcheck: "0.10.0"
-    - validate-local-configured 
     - role: common-tools
       vars:
         additional_packages:
           - bash-completion
-          - vinagre
+          - cowsay
+          - dos2unix
+          - gnupg
+          - jq
+          - libffi-dev
+          - libyaml-dev
+          - parallel
+          - pre-commit
           - v4l-utils
+          - vinagre
+          - yq
+    - role: asdf-setup
+      vars:
+        plugins_to_install:
+          - nodejs
+          - python
+          - ruby
+          - shellcheck
+          - terraform
+          - terraform-docs
+        plugins_to_install_by_url:
+          golang: "https://github.com/asdf-community/asdf-golang.git"
+        tool_versions:
+          golang: "1.27.1"
+          nodejs: "22.20.0"
+          python: "3.14.7"
+          ruby: "4.0.6"
+          shellcheck: "0.11.0"
+          terraform: "1.16.1"
+          "terraform-docs": "v0.24.0"
+    - validate-local-configured
     - apple-hardware
     - common-desktop
     - home-nfs-client
