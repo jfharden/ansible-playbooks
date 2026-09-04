@@ -10,6 +10,7 @@
     - role: vim-config
       vars:
         remove_vim_instant_markdown: true
+        force_plain_vim: true
     - common-tools
     - k3s
 
