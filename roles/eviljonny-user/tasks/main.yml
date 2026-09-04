@@ -29,6 +29,7 @@
         group: eviljonny
 
 - name: Allow sudo with no password for eviljonny
+  when: passwordless_sudo == true
   become: true
   ansible.builtin.copy:
     dest: /etc/sudoers.d/010_eviljonny-nopasswd
