@@ -77,6 +77,13 @@
     cmd: 'source /home/eviljonny/.bashrc && asdf plugin add {{ item | quote }}'
   loop: "{{ plugins_to_install }}"
 
+- name: Add asdf plugins by url
+  when: item not in asdf_installed_plugins.stdout_lines
+  ansible.builtin.shell:
+    executable: /bin/bash
+    cmd: 'source /home/eviljonny/.bashrc && asdf plugin add {{ item.key | quote }} {{ item.value | quote }}'
+  loop: "{{ plugins_to_install_by_url | dict2items }}"
+
 - name: Ensure .tool-versions exists
   ansible.builtin.file:
     path: /home/eviljonny/.tool-versions

@@ -111,6 +111,7 @@
         accept_hostkey: true
         force: false
         update: false
+        version: my-config
 
     - name: neovim is installed
       block:

@@ -1,5 +1,9 @@
+---
 plugins_to_install:
   - nodejs
+plugins_to_install_by_url:
+  golang: "https://github.com/asdf-community/asdf-golang.git"
 tool_versions:
-  nodejs: "22.14.0"
+  golang: "1.27.1"
+  nodejs: "22.20.0"
 asdf_update_plugins: false
