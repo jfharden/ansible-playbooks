@@ -81,6 +81,12 @@
 - name: install neovim
   when: ansible_distribution_version != "20.04"
   block:
+    - name: Ensure home bin exists
+      ansible.builtin.file:
+        path: /home/eviljonny/bin
+        state: directory
+        mode: '0755'
+
     - name: Create /home/eviljonny/gitdevel/github.com/jfharden/kickstart.nvim/
       ansible.builtin.file:
         path: /home/eviljonny/gitdevel/github.com/jfharden/kickstart.nvim
@@ -107,17 +113,52 @@
         update: false
 
     - name: neovim is installed
-      become: true
       block:
-        - name: Neovim ppa is added
-          ansible.builtin.apt_repository:
-            repo: ppa:neovim-ppa/stable
+        - name: Check if neovim binary exists
+          ansible.builtin.stat:
+            path: /home/eviljonny/bin/nvim
+          register: neovim_binary_stat
 
-        - name: Neovim apt package is installed
-          ansible.builtin.apt:
-            name: neovim
-            update_cache: yes
-            state: present
+        - name: Get current neovim version
+          when: neovim_binary_stat.stat.exists
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: '/home/eviljonny/bin/nvim --version | grep "NVIM v" | cut -f 2 -d " " | sed -E "s/^v//"'
+          register: neovim_version
+          changed_when: false
+
+        - name: Get neovim latest release information
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/neovim/neovim/releases/latest
+            return_content: true
+          register: neovim_latest_release_json
+
+        - name: Set neovim facts
+          ansible.builtin.set_fact:
+            neovim_appimage_name: "{{ neovim_release_json.name }}"
+            neovim_zip_url: "{{ neovim_release_json.browser_download_url }}"
+            neovim_latest_version: "{{ neovim_parsed_release_json.tag_name }}"
+            neovim_latest_version_without_prefix: "{{ neovim_parsed_release_json.tag_name | regex_replace('^v', '') }}"
+          vars:
+            neovim_binary_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
+            neovim_platform: "{{ ansible_system | lower }}"
+            neovim_release_json: "{{ neovim_latest_release_json.json | community.general.json_query('assets[?contains(name, `nvim-' + neovim_platform + '-' + neovim_binary_arch +'`) && ends_with(name, `appimage`)] | [0]') }}"
+            neovim_parsed_release_json: "{{ neovim_latest_release_json.json }}"
+
+        - name: Install or update neovim
+          when: (not neovim_binary_stat.stat.exists) or neovim_latest_version_without_prefix is version(neovim_version.stdout_lines[0], ">")
+          block:
+            - name: Download neovim release archive
+              ansible.builtin.get_url:
+                url: "{{ neovim_zip_url }}"
+                dest: "/tmp/{{ neovim_appimage_name }}"
+
+            - name: Copy neovim binary into /home/eviljonny/bin
+              ansible.builtin.copy:
+                src: "/tmp/{{ neovim_appimage_name }}"
+                remote_src: true
+                dest: /home/eviljonny/bin/nvim
+                mode: "0750"
 
     - name: neovim kickstart dependencies are installed
       block:
@@ -130,37 +171,41 @@
             state: present
 
     - name: tree-sitter-cli is installed
-      when: ansible_distribution_version != "20.04"
       block:
-        - name: Ensure home bin exists
-          ansible.builtin.file:
-            path: /home/eviljonny/bin
-            state: directory
-            mode: '0755'
-
         - name: Check if tree-sitter-cli binary exists
           ansible.builtin.stat:
-            path: /home/eviljonny/bin/tree-sitter-cli
+            path: /home/eviljonny/bin/tree-sitter
           register: tree_sitter_cli_binary_stat
 
-        - name: tree-sitter-cli binary is installed
-          when: not tree_sitter_cli_binary_stat.stat.exists
+        - name: Get current tree-sitter-cli version
+          when: tree_sitter_cli_binary_stat.stat.exists
+          ansible.builtin.shell:
+            executable: /bin/bash
+            cmd: '/home/eviljonny/bin/tree-sitter --version | head -n 1 | cut -f 2 -d " "'
+          register: tree_sitter_cli_version
+          changed_when: false
+
+        - name: Get tree-sitter-cli latest release information
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest
+            return_content: true
+          register: tree_sitter_cli_latest_release_json
+
+        - name: Set tree_sitter_cli facts
+          ansible.builtin.set_fact:
+            tree_sitter_cli_zip_name: "{{ tree_sitter_cli_release_json.name }}"
+            tree_sitter_cli_zip_url: "{{ tree_sitter_cli_release_json.browser_download_url }}"
+            tree_sitter_cli_latest_version: "{{ tree_sitter_cli_parsed_release_json.tag_name }}"
+            tree_sitter_cli_latest_version_without_prefix: "{{ tree_sitter_cli_parsed_release_json.tag_name | regex_replace('^v', '') }}"
+          vars:
+            tree_sitter_cli_binary_arch: "{{ 'x64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
+            tree_sitter_cli_platform: "{{ ansible_system | lower }}"
+            tree_sitter_cli_release_json: "{{ tree_sitter_cli_latest_release_json.json | community.general.json_query('assets[?contains(name, `tree-sitter-cli-' + tree_sitter_cli_platform + '-' + tree_sitter_cli_binary_arch +'`) && ends_with(name, `zip`)] | [0]') }}"
+            tree_sitter_cli_parsed_release_json: "{{ tree_sitter_cli_latest_release_json.json }}"
+
+        - name: Install or update tree-sitter-cli
+          when: (not tree_sitter_cli_binary_stat.stat.exists) or tree_sitter_cli_latest_version_without_prefix is version(tree_sitter_cli_version.stdout_lines[0], ">")
           block:
-            - name: Get tree-sitter-cli latest release information
-              ansible.builtin.uri:
-                url: https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest
-                return_content: true
-              register: tree_sitter_cli_latest_release_json
-
-            - name: Set tree_sitter_cli facts
-              ansible.builtin.set_fact:
-                tree_sitter_cli_zip_name: "{{ tree_sitter_cli_release_json.name }}"
-                tree_sitter_cli_zip_url: "{{ tree_sitter_cli_release_json.browser_download_url }}"
-              vars:
-                tree_sitter_cli_binary_arch: "{{ 'x64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
-                tree_sitter_cli_platform: "{{ ansible_system | lower }}"
-                tree_sitter_cli_release_json: "{{ tree_sitter_cli_latest_release_json.json | community.general.json_query('assets[?contains(name, `tree-sitter-cli-' + tree_sitter_cli_platform + '-' + tree_sitter_cli_binary_arch +'`) && ends_with(name, `gz`)] | [0]') }}"
-
             - name: Download tree_sitter_cli release archive
               ansible.builtin.get_url:
                 url: "{{ tree_sitter_cli_zip_url }}"
