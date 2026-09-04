@@ -1,6 +1,6 @@
 ---
 - name: install plain vim
-  when: ansible_distribution_version == "20.04"
+  when: force_plain_vim or ansible_distribution_version == "20.04"
   block:
     - name: Create bitbucket.org/eviljonny/vimconfig directory
       ansible.builtin.file:
@@ -79,7 +79,7 @@
             global: true
 
 - name: install neovim
-  when: ansible_distribution_version != "20.04"
+  when: not force_plain_vim and ansible_distribution_version != "20.04"
   block:
     - name: Ensure home bin exists
       ansible.builtin.file:

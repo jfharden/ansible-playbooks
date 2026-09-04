@@ -1,2 +1,3 @@
 ---
 remove_vim_instant_markdown: false
+force_plain_vim: true
