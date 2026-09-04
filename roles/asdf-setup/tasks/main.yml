@@ -95,7 +95,7 @@
 - name: Add to tool-versions file
   ansible.builtin.lineinfile:
     path: /home/eviljonny/.tool-versions
-    regexp: '^{{ item.key }}'
+    regexp: '^{{ item.key }} '
     line: '{{ item.key }} {{ item.value }}'
   loop: "{{ tool_versions | dict2items }}"
 
