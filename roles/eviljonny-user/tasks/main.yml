@@ -37,3 +37,38 @@
     group: root
     mode: "0440"
     content: "eviljonny ALL=(ALL) NOPASSWD: ALL"
+
+- name: Check for ssh config file existence
+  ansible.builtin.stat:
+    path: /home/eviljonny/.ssh/config
+  register: ssh_config_stat
+  changed_when: false
+
+- name: Create ssh config file
+  when: not ssh_config_stat.stat.exists
+  ansible.builtin.file:
+    path: /home/eviljonny/.ssh/config
+    state: touch
+    owner: eviljonny
+    group: eviljonny
+    mode: 0700
+
+- name: Set up ssh config
+  block:
+    - name: Add hosts config to ssh config
+      ansible.builtin.blockinfile:
+        path: /home/eviljonny/.ssh/config
+        append_newline: true
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.host }}"
+        block: |
+          Host {{ item.host }} {{ item.ip }}
+            Hostname {{ item.ip }}
+            User eviljonny
+            IdentityFile ~/.ssh/id_ed25519
+
+      loop:
+        - { host: 'smashbook', ip: '192.168.1.33' }
+        - { host: 'k8s-1', ip: '192.168.1.201' }
+        - { host: 'k8s-2', ip: '192.168.1.202' }
+        - { host: 'k8s-3', ip: '192.168.1.203' }
+        - { host: 'checkmatepi', ip: '192.168.1.28' }
