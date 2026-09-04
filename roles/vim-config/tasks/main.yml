@@ -110,7 +110,7 @@
         dest: /home/eviljonny/gitdevel/github.com/jfharden/kickstart.nvim
         accept_hostkey: true
         force: false
-        update: false
+        update: true
         version: my-config
 
     - name: neovim is installed
