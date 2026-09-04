@@ -1,5 +1,6 @@
 ---
-- hosts: local
+- name: Install Local Laptop for fun dev
+  hosts: local
   roles:
     - eviljonny-user
     - role: gitdevel-setup
@@ -17,7 +18,12 @@
           - dos2unix
           - gnupg
           - jq
+          - libbz2-dev
           - libffi-dev
+          - liblzma-dev
+          - libncurses-dev
+          - libreadline-dev
+          - libsqlite3-dev
           - libyaml-dev
           - parallel
           - pre-commit
@@ -50,12 +56,15 @@
     - docker
     - helm
 
-- hosts: k8s-1
+- name: Get the config vars from the k8s cluster
+  hosts: k8s-1
   tasks:
-    - include_role:
+    - name: Gateher vars needed for kubectl setup
+      ansible.builtin.include_role:
         name: kubectl
         tasks_from: gather_config_vars
 
-- hosts: local
+- name: Install and configure local kubectl
+  hosts: local
   roles:
     - kubectl
