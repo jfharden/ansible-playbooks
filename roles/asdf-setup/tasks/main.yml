@@ -1,3 +1,4 @@
+---
 - name: Ensure home bin exists
   ansible.builtin.file:
     path: /home/eviljonny/bin
@@ -117,6 +118,7 @@
 - name: Run asdf install
   ansible.builtin.shell:
     executable: /bin/bash
-    cmd: "source /home/eviljonny/.bashrc && asdf install"
+    cmd: "source /home/eviljonny/.bashrc && asdf install {{ item.key }}"
   register: asdf_install_result
   changed_when: asdf_install_result is search("Installing")
+  loop: "{{ tool_versions | dict2items }}"
