@@ -6,7 +6,7 @@
     comment: Jonathan Harden
     state: present
     groups: sudo
-    append: yes
+    append: true
 
 - name: Configure eviljonny
   become: true
@@ -18,10 +18,10 @@
         state: directory
         owner: eviljonny
         group: eviljonny
-        mode: 0755
+        mode: "0755"
 
     - name: Add eviljonnys ssh public keys
-      get_url:
+      ansible.builtin.get_url:
         url: https://github.com/jfharden.keys
         dest: /home/eviljonny/.ssh/authorized_keys
         mode: '0640'
@@ -41,7 +41,7 @@
     state: touch
     owner: eviljonny
     group: eviljonny
-    mode: 0700
+    mode: "0700"
 
 - name: Set up ssh config
   block:
@@ -57,8 +57,8 @@
             IdentityFile ~/.ssh/id_ed25519
 
       loop:
-        - { host: 'smashbook', ip: '192.168.1.33' }
-        - { host: 'k8s-1', ip: '192.168.1.201' }
-        - { host: 'k8s-2', ip: '192.168.1.202' }
-        - { host: 'k8s-3', ip: '192.168.1.203' }
-        - { host: 'checkmatepi', ip: '192.168.1.28' }
+        - {host: 'smashbook', ip: '192.168.1.33'}
+        - {host: 'k8s-1', ip: '192.168.1.201'}
+        - {host: 'k8s-2', ip: '192.168.1.202'}
+        - {host: 'k8s-3', ip: '192.168.1.203'}
+        - {host: 'checkmatepi', ip: '192.168.1.28'}
