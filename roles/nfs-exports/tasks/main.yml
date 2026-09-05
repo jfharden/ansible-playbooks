@@ -11,7 +11,7 @@
 
 - name: Create any directories needed on local disk
   become: true
-  when: "{{ item.create_dir }}"
+  when: item.create_dir
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
@@ -33,8 +33,19 @@
   become: true
   ansible.builtin.blockinfile:
     dest: /etc/exports
-    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR {{ item.path }} {{ item.export_to }}"
-    content: "{{ item.path }} {{ item.export_to }}({{ item.mode }},sync,no_subtree_check,all_squash,anonuid={{ item.anon_uid }},anongid={{ item.anon_gid }},insecure)"
+    marker: >-
+      # {mark} ANSIBLE MANAGED BLOCK FOR {{ item.path }} {{ item.export_to }}
+    content: >-
+      {{ item.path }}
+      {{ item.export_to }}(
+        {{ item.mode }},
+        sync,
+        no_subtree_check,
+        all_squash,
+        anonuid={{ item.anon_uid }},
+        anongid={{ item.anon_gid }},
+        insecure
+      )
     backup: true
   loop: "{{ remotes_to_export }}"
   notify:
