@@ -11,7 +11,10 @@
   become: true
   ansible.builtin.blockinfile:
     dest: /etc/haproxy/haproxy.cfg
-    block: "{{ lookup('template', '../templates/haproxy.cfg') }}"
+    block: >-
+      {{
+        lookup('ansible.builtin.file', 'haproxy.cfg')
+      }}
     marker: "# {mark} ANSIBLE MANAGED BLOCK for k3s floating IP"
     prepend_newline: true
     backup: true
