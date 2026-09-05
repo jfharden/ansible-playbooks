@@ -1,30 +1,30 @@
 ---
 remotes_to_mount:
-  Smashbook/MaxPlexUpload: 
+  Smashbook/MaxPlexUpload:
     server_path: /mnt/MEDIA_VOL_1/Incoming/Max_Plex_Upload/
     server_ip: 192.168.1.33
     mode: rw
-  Smashbook/JonnyPlexUpload: 
+  Smashbook/JonnyPlexUpload:
     server_path: /mnt/MEDIA_VOL_1/Incoming/Jonny_Plex_Upload/
     server_ip: 192.168.1.33
     mode: rw
-  Smashbook/Unorganised: 
+  Smashbook/Unorganised:
     server_path: /mnt/MEDIA_VOL_1/Unorganised/
     server_ip: 192.168.1.33
     mode: ro
-  Smashbook/Upload: 
+  Smashbook/Upload:
     server_path: /mnt/MEDIA_VOL_1/Unorganised/Upload
     server_ip: 192.168.1.33
     mode: rw
-  Smashbook/PlexLibrary: 
+  Smashbook/PlexLibrary:
     server_path: /mnt/MEDIA_VOL_1/PlexLibrary/
     server_ip: 192.168.1.33
     mode: ro
-  Smashbook/NonPlexMedia: 
+  Smashbook/NonPlexMedia:
     server_path: /mnt/MEDIA_VOL_1/NonPlexMedia/
     server_ip: 192.168.1.33
     mode: ro
-  Smashbook/RetroGames: 
+  Smashbook/RetroGames:
     server_path: /mnt/MEDIA_VOL_1/RetroGames/
     server_ip: 192.168.1.33
     mode: ro
