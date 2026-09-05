@@ -1,8 +1,9 @@
 ---
-- hosts: bootstrap_eviljonny
+- name: Setup eviljonny user
+  hosts: bootstrap_eviljonny
   vars_prompt:
     - name: "ansible_become_pass"
       prompt: "Sudo password"
-      private: yes
+      private: true
   roles:
     - eviljonny-user
