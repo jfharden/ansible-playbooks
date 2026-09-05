@@ -59,7 +59,7 @@
 - name: Get the config vars from the k8s cluster
   hosts: k8s-1
   tasks:
-    - name: Gateher vars needed for kubectl setup
+    - name: Gather vars needed for kubectl setup
       ansible.builtin.include_role:
         name: kubectl
         tasks_from: gather_config_vars
