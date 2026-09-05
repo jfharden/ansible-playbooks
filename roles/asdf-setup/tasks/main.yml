@@ -1,52 +1,33 @@
 ---
-- name: Ensure home bin exists
-  ansible.builtin.file:
-    path: /home/eviljonny/bin
-    state: directory
-    mode: '0755'
+- name: Install asdf executable
+  ansible.builtin.include_role:
+    name: install_github_release
+    public: false
+  vars:
+    install_github_release_source_github_repo: asdf-vm/asdf
+    install_github_release_source_release_file_prefix: "asdf"
+    install_github_release_source_release_file_separator: "-"
+    install_github_release_source_release_file_extension: ".tar.gz"
 
-- name: Check if asdf binary exists
-  ansible.builtin.stat:
-    path: /home/eviljonny/bin/asdf
-  register: asdf_binary_stat
+    install_github_release_target_location_directory: /home/eviljonny/bin
+    install_github_release_target_executable_name: asdf
 
-- name: Install asdf binary
-  when: not asdf_binary_stat.stat.exists
-  block:
-    - name: Get asdf latest release information
-      ansible.builtin.uri:
-        url: https://api.github.com/repos/asdf-vm/asdf/releases/latest
-        return_content: true
-      register: asdf_latest_release_json
+    install_github_release_version_line_match_regex: "^asdf version v"
+    install_github_release_version_line_replace_regex:
+      's/^asdf version v([^ ]+) .*$/\1/'
 
-    - name: Set asdf facts
-      ansible.builtin.set_fact:
-        asdf_zip_name: "{{ asdf_release_json.name }}"
-        asdf_zip_url: "{{ asdf_release_json.browser_download_url }}"
-      vars:
-        asdf_binary_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' if ansible_architecture == 'aarch64' else ansible_architecture }}"
-        asdf_platform: "{{ ansible_system | lower }}"
-        asdf_release_json: "{{ asdf_latest_release_json.json | community.general.json_query('assets[?contains(name, `' + asdf_platform + '-' + asdf_binary_arch +'`) && ends_with(name, `gz`)] | [0]') }}"
+    install_github_release_architecture:
+      x86_64: "amd64"
+      aarch64: "arm64"
 
-    - name: Download asdf release archive
-      ansible.builtin.get_url:
-        url: "{{ asdf_zip_url }}"
-        dest: "/tmp/{{ asdf_zip_name }}"
-
-    - name: Copy asdf binary into homedir
-      ansible.builtin.unarchive:
-        src: "/tmp/{{ asdf_zip_name }}"
-        remote_src: true
-        dest: /home/eviljonny/bin/
-
-    - name: Create bashrc.d asdf integration
-      ansible.builtin.copy:
-        dest: /home/eviljonny/.bashrc.d/00-asdf.bashrc
-        content: |
-          #!/usr/bin/env bash
-          export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
-          . <(asdf completion bash)
-        mode: '0664'
+- name: Create bashrc.d asdf integration
+  ansible.builtin.copy:
+    dest: /home/eviljonny/.bashrc.d/00-asdf.bashrc
+    content: |
+      #!/usr/bin/env bash
+      export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+      . <(asdf completion bash)
+    mode: '0664'
 
 - name: Reset connection
   ansible.builtin.meta: reset_connection
@@ -66,7 +47,7 @@
     line: legacy_version_file = yes
 
 - name: Get installed plugins
-  ansible.builtin.shell:
+  ansible.builtin.command: >-
     cmd: /home/eviljonny/bin/asdf plugin list
   changed_when: false
   register: asdf_installed_plugins
@@ -77,13 +58,17 @@
     executable: /bin/bash
     cmd: 'source /home/eviljonny/.bashrc && asdf plugin add {{ item | quote }}'
   loop: "{{ plugins_to_install }}"
+  changed_when: item not in asdf_installed_plugins.stdout_lines
 
 - name: Add asdf plugins by url
   when: item.key not in asdf_installed_plugins.stdout_lines
   ansible.builtin.shell:
     executable: /bin/bash
-    cmd: 'source /home/eviljonny/.bashrc && asdf plugin add {{ item.key | quote }} {{ item.value | quote }}'
+    cmd: >-
+      source /home/eviljonny/.bashrc
+      && asdf plugin add {{ item.key | quote }} {{ item.value | quote }}'
   loop: "{{ plugins_to_install_by_url | dict2items }}"
+  changed_when: item not in asdf_installed_plugins.stdout_lines
 
 - name: Ensure .tool-versions exists
   ansible.builtin.file:
