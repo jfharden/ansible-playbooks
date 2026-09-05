@@ -18,20 +18,30 @@
   ansible.builtin.get_url:
     url: https://packages.buildkite.com/helm-linux/helm-debian/gpgkey
     dest: /etc/apt/keyrings/helm-apt-keyring.asc
+    mode: "0644"
   register: helm_keyring
 
 - name: Verify helm GPG key id
-  ansible.builtin.shell: |
-    test $(gpg --show-keys --with-colons /etc/apt/keyrings/helm-apt-keyring.asc | awk -F: '$1 == "fpr" {print $10}' | head -n 1) == "DDF78C3E6EBB2D2CC223C95C62BA89D07698DBC6"
+  ansible.builtin.shell: >-
+    set -euo pipefail
+    test $(
+      gpg --show-keys --with-colons /etc/apt/keyrings/helm-apt-keyring.asc
+      | awk -F: '$1 == "fpr" {print $10}'
+      | head -n 1
+    ) == "DDF78C3E6EBB2D2CC223C95C62BA89D07698DBC6"
   args:
     executable: /bin/bash
   changed_when: false
 
 - name: Dearmour ansible keyring key
-  when: helm_keyring.changed or not helm_keyring_stat.stat.exists 
+  when: helm_keyring.changed or not helm_keyring_stat.stat.exists
   become: true
   ansible.builtin.command:
-    cmd: gpg --dearmor -o /etc/apt/keyrings/helm-apt-keyring.gpg /etc/apt/keyrings/helm-apt-keyring.asc
+    cmd: >-
+      gpg --dearmor
+        -o /etc/apt/keyrings/helm-apt-keyring.gpg
+        /etc/apt/keyrings/helm-apt-keyring.asc
+    creates: /etc/apt/keyrings/helm-apt-keyring.gpg
 
 - name: Change permissions on helm keyring key
   become: true
@@ -44,7 +54,11 @@
 - name: Add helm repository into sources list
   become: true
   ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/helm-apt-keyring.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main"
+    repo: >-
+      deb
+        [signed-by=/etc/apt/keyrings/helm-apt-keyring.gpg]
+        https://packages.buildkite.com/helm-linux/helm-debian/any/
+        any main
     state: present
     filename: helm
 
@@ -53,5 +67,5 @@
   ansible.builtin.apt:
     name:
       - helm
-    update_cache: yes
+    update_cache: true
     state: present
