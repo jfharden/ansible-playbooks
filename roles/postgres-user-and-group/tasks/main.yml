@@ -1,3 +1,4 @@
+---
 - name: Ensure postgres group exists with id 70
   become: true
   ansible.builtin.group:
@@ -15,4 +16,3 @@
     shell: /usr/sbin/nologin
     create_home: false
     home: /nonexistent
-
