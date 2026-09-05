@@ -1,3 +1,4 @@
+---
 - name: Add plex gpg apt-key
   become: true
   ansible.builtin.apt_key:
@@ -5,9 +6,15 @@
     url: https://downloads.plex.tv/plex-keys/PlexSign.key
     keyring: /etc/apt/trusted.gpg.d/plex-sign.gpg
 
+# This needs to be updated to install using the new repo
 - name: Add plex apt repo
   ansible.builtin.apt_repository:
-    repo: "deb [arch=amd64 signed-by=/usr/share/keyrings/plexmediaserver.gpg] https://downloads.plex.tv/repo/deb public main"
+    repo: >-
+      deb
+      [arch=amd64 signed-by=/usr/share/keyrings/plexmediaserver.gpg]
+      https://downloads.plex.tv/repo/deb
+      public
+      main
     filename: plexmediaserver.list
     state: present
     update_cache: true
