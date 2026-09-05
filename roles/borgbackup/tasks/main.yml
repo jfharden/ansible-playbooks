@@ -12,12 +12,15 @@
   become: true
   ansible.builtin.stat:
     path: /root/borgbackup/passphrase
-  register: passphrase_stat
+  register: borgbackup_passphrase_stat
 
 - name: Fail if passphrase file doesn't exist
   ansible.builtin.fail:
-    msg: The passphrase file /root/borgbackup/passphrase does not exist. You need to create it containing the passphrase used for the borgbackup repokey
-  when: not passphrase_stat.stat.exists
+    msg: >-
+      The passphrase file /root/borgbackup/passphrase does not exist.
+      You need to create it containing the passphrase used for the
+      borgbackup repokey
+  when: not borgbackup_passphrase_stat.stat.exists
 
 - name: Ensure correct permissions for passphrase
   become: true
@@ -32,12 +35,15 @@
   become: true
   ansible.builtin.stat:
     path: /root/borgbackup/hetzner_username
-  register: username_stat
+  register: borgbackup_username_stat
 
 - name: Fail if username file doesn't exist
   ansible.builtin.fail:
-    msg: The username file /root/borgbackup/hetzner_username does not exist. You need to create it containing the hetzner username used for the storagebox
-  when: not username_stat.stat.exists
+    msg: >-
+      The username file /root/borgbackup/hetzner_username does not exist.
+      You need to create it containing the hetzner username used for the
+      storagebox
+  when: not borgbackup_username_stat.stat.exists
 
 - name: Ensure correct permissions for username
   become: true
@@ -57,7 +63,7 @@
 - name: Copy scripts
   become: true
   ansible.builtin.copy:
-    src: "../files/{{ item }}"
+    src: "{{ item }}"
     dest: "/root/borgbackup/{{ item }}"
     owner: root
     group: root
@@ -81,6 +87,9 @@
     day: "*"
     month: "*"
     weekday: "*"
-    job: cd /root/borgbackup && ((./perform_backup.sh && ./send_success_notice.sh) || ./send_failure_notice.sh)
+    job: >-
+      cd /root/borgbackup
+      && ((./perform_backup.sh && ./send_success_notice.sh)
+      || ./send_failure_notice.sh)
     state: present
     user: root
