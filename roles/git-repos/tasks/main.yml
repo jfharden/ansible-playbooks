@@ -1,5 +1,5 @@
 ---
-- name: Checkout vimconfig repo
+- name: Checkout repo
   ansible.builtin.git:
     repo: "{{ item.url }}"
     dest: "{{ item.dir }}"
