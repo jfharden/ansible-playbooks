@@ -1,34 +1,16 @@
-- name: Ensure docker engine installed
+---
+- name: Ensure docker and other components installed
   become: true
   ansible.builtin.apt:
-    name: docker.io
+    name: "{{ item }}"
     state: present
     update_cache: true
     cache_valid_time: 3600
-
-- name: Ensure docker buildx installed
-  become: true
-  ansible.builtin.apt:
-    name: docker-buildx
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
-
-- name: Ensure docker compose installed
-  become: true
-  ansible.builtin.apt:
-    name: docker-compose-v2
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
-
-- name: Ensure qemu-user-static is installed
-  become: true
-  ansible.builtin.apt:
-    name: qemu-user-static
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
+  loop:
+    - docker.io
+    - docker-buildx
+    - docker-compose-v2
+    - qemu-user-static
 
 - name: Check for presence of docker daemon config
   become: true
@@ -40,7 +22,7 @@
   become: true
   when: not docker_daemon_json_stat.stat.exists
   ansible.builtin.copy:
-    src: "../files/daemon.json"
+    src: daemon.json
     dest: /etc/docker/daemon.json
     owner: root
     group: root
@@ -54,11 +36,14 @@
     cmd: "grep '^flags: .*F.*$' /proc/sys/fs/binfmt_misc/qemu-arm"
   ignore_errors: true
   changed_when: false
-  register: qemu_arm_registration_status
+  register: docker_qemu_arm_registration_status
 
 - name: Register qemu with docker
-  when: qemu_arm_registration_status.rc != 0
+  when: docker_qemu_arm_registration_status.rc != 0
   ansible.builtin.command:
-    cmd: "docker run --rm --privileged multiarch/qemu-user-static --reset -p yes"
-
-
+    cmd: >-
+      docker run
+        --rm --privileged
+        multiarch/qemu-user-static
+        --reset -p yes
+  changed_when: true
