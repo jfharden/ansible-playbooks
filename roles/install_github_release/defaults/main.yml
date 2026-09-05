@@ -20,9 +20,10 @@ install_github_release_version_flag: "--version"
 install_github_release_version_line_match_regex:
 install_github_release_version_line_replace_regex:
 
-# Architecture conversation needed, keys are the ansible_arcthitecture, values
-# are what the github repo includes as the description in it's release
-#  e.g tree-sitter-cli-linux-x64.zip would need `x86_64: "x64"`
+# Architecture conversation needed, keys are the
+# ansible_facts['arcthitecture'], values are what the github repo includes as
+# the description in it's release e.g tree-sitter-cli-linux-x64.zip would need
+# `x86_64: "x64"`
 install_github_release_architecture:
   x86_64: "x86_64"
   aarch64: "arm64"

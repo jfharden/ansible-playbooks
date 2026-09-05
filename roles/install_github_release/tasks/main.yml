@@ -63,11 +63,11 @@
           }}"
       vars:
         binary_arch: "{{
-            install_github_release_architecture[ansible_architecture]
-            | default(ansible_architecture)
+            install_github_release_architecture[ansible_facts['architecture']]
+            | default(ansible_facts['architecture'])
           }}"
         prefix: "{{ install_github_release_source_release_file_prefix }}"
-        platform: "{{ ansible_system | lower }}"
+        platform: "{{ ansible_facts['system'] | lower }}"
         separator: "{{ install_github_release_source_release_file_separator }}"
         extension: "{{ install_github_release_source_release_file_extension }}"
         executable_parsed_release_json:
