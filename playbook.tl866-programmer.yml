@@ -1,5 +1,5 @@
 ---
-- hosts: local
+- name: Install TL866 programmer
+  hosts: local
   roles:
     - tl866-programmer
-
