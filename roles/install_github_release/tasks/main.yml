@@ -1,0 +1,130 @@
+---
+- name: Install/upgrade executable
+  vars:
+    executable_fullpath: >-
+      {{
+        [
+          install_github_release_target_location_directory,
+          install_github_release_target_executable_path_within_dir,
+          install_github_release_target_executable_name,
+        ] | path_join | normpath
+      }}
+  block:
+    - name: Ensure target directory exists
+      ansible.builtin.file:
+        path: "{{ install_github_release_target_location_directory }}"
+        state: directory
+        mode: "{{ install_github_release_target_location_mode }}"
+
+    - name: Check if binary is already installed
+      ansible.builtin.stat:
+        path: "{{ executable_fullpath }}"
+      register: install_github_release_executable_stat
+
+    - name: Get current executable version
+      when: install_github_release_executable_stat.stat.exists
+      ansible.builtin.shell:
+        executable: /bin/bash
+        cmd: |
+          set -euo pipefail
+          {{ executable_fullpath }} {{ install_github_release_version_flag }} \
+            | grep '{{ install_github_release_version_line_match_regex }}' \
+            | sed -E '{{ install_github_release_version_line_replace_regex }}'
+      register: install_github_release_executable_version
+      changed_when: false
+
+    - name: Get executable latest release information
+      ansible.builtin.uri:
+        url: "{{
+            'https://api.github.com/repos/'
+              + install_github_release_source_github_repo
+              + '/releases/latest'
+            if install_github_release_source_version_latest
+            else 'https://api.github.com/repos/'
+              + install_github_release_source_github_repo
+              + '/releases/tags/'
+              + install_github_release_source_version_tag
+          }}"
+        return_content: true
+      register: install_github_release_executable_latest_release_json
+
+    - name: Set executable facts
+      ansible.builtin.set_fact:
+        install_github_release_executable_artifact_name:
+          "{{ executable_release_json.name }}"
+        install_github_release_executable_artifact_url:
+          "{{ executable_release_json.browser_download_url }}"
+        install_github_release_executable_latest_version:
+          "{{ executable_parsed_release_json.tag_name }}"
+        install_github_release_executable_latest_version_without_prefix:
+          "{{
+            executable_parsed_release_json.tag_name
+            | regex_replace('^v', '')
+          }}"
+      vars:
+        binary_arch: "{{
+            install_github_release_architecture[ansible_architecture]
+            | default(ansible_architecture)
+          }}"
+        platform: "{{ ansible_system | lower }}"
+        executable_parsed_release_json:
+          "{{ install_github_release_executable_latest_release_json.json }}"
+        executable_artifact_name_search: >-
+          {{
+            install_github_release_source_release_file_prefix
+              + install_github_release_source_release_file_separator
+              + platform
+              + install_github_release_source_release_file_separator
+              + binary_arch
+          }}
+        executable_release_json: >-
+          {{ executable_parsed_release_json
+            | community.general.json_query('assets[?
+                contains(name, `' + executable_artifact_name_search + '`)
+                && ends_with(
+                  name,
+                  `' + install_github_release_source_release_file_extension + '`
+                )
+              ] | [0]')
+          }}
+
+    - name: Install or update the installation
+      when:
+        (not install_github_release_executable_stat.stat.exists)
+        or install_github_release_executable_latest_version_without_prefix
+          is version(
+            install_github_release_executable_version.stdout_lines[0],
+            ">"
+          )
+      block:
+        - name: Download executable release archive
+          ansible.builtin.get_url:
+            url: "{{ install_github_release_executable_artifact_url }}"
+            dest: "/tmp/{{ install_github_release_executable_artifact_name }}"
+            mode: "0600"
+
+        - name: Extract exectuable
+          when:
+            install_github_release_executable_artifact_name.endswith(".zip") or
+            install_github_release_executable_artifact_name.endswith(".tgz") or
+            install_github_release_executable_artifact_name.endswith(".tbz") or
+            install_github_release_executable_artifact_name.endswith("tar.gz")
+          ansible.builtin.unarchive:
+            src: "/tmp/{{ install_github_release_executable_artifact_name }}"
+            remote_src: false
+            dest: "{{ install_github_release_target_location_directory }}"
+
+        - name: Copy executable into /home/eviljonny/bin
+          when: not(
+              install_github_release_executable_artifact_name.endswith(".zip")
+              or
+              install_github_release_executable_artifact_name.endswith(".tgz")
+              or
+              install_github_release_executable_artifact_name.endswith(".tbz")
+              or
+              install_github_release_executable_artifact_name.endswith("tar.gz")
+            )
+          ansible.builtin.copy:
+            src: "/tmp/{{ install_github_release_executable_artifact_name }}"
+            dest: "{{ executable_fullpath }}"
+            mode: "0750"

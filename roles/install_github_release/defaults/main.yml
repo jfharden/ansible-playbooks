@@ -1,0 +1,28 @@
+---
+# Source information
+install_github_release_source_github_repo: jfharden/ansible-playbooks
+install_github_release_source_release_file_separator: '-'
+install_github_release_source_release_file_extension: '.zip'
+install_github_release_source_version_latest: true
+install_github_release_source_version_tag: ""
+
+# Target location information
+install_github_release_target_location_directory:
+install_github_release_target_location_mode: '0755'
+
+# Target executable information
+install_github_release_target_executable_name:
+install_github_release_target_executable_path_within_dir: ''
+install_github_release_target_executable_mode: '0750'
+
+# Version extraction and comparison information
+install_github_release_version_flag: "--version"
+install_github_release_version_line_match_regex:
+install_github_release_version_line_replace_regex:
+
+# Architecture conversation needed, keys are the ansible_arcthitecture, values
+# are what the github repo includes as the description in it's release
+#  e.g tree-sitter-cli-linux-x64.zip would need `x86_64: "x64"`
+install_github_release_architecture:
+  x86_64: "x86_64"
+  aarch64: "arm64"
