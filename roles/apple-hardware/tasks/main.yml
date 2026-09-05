@@ -1,17 +1,19 @@
+---
 - name: Get PCI device list
-  ansible.builtin.shell:
-    cmd: "lspci"
+  ansible.builtin.command: lspci
   register: lspci_output
   changed_when: false
 
 - name: Get USB device list
-  ansible.builtin.shell:
-    cmd: "lsusb"
+  ansible.builtin.command: lsusb
   register: lsusb_output
   changed_when: false
 
 - name: Install FacetimeHD camera drivers
-  when: lspci_output.stdout is search(pattern=".*Broadcom.*720p FaceTime HD Camera")
+  when: >-
+    lspci_output.stdout is search(
+      pattern=".*Broadcom.*720p FaceTime HD Camera"
+    )
   become: true
   block:
     - name: Add facetimehd ppa
@@ -23,11 +25,15 @@
         name:
           - facetimehd-dkms
           - facetimehd-firmware
-        update_cache: yes
+        update_cache: true
         state: present
 
 - name: Fix swapped tilde key keylayout
-  when: fix_swapped_tilde_key and lsusb_output.stdout is search(pattern=".*05ac:0274 Apple, Inc\. Apple Internal Keyboard")
+  when: >-
+    fix_swapped_tilde_key
+    and lsusb_output.stdout is search(
+      pattern=".*05ac:0274 Apple, Inc\. Apple Internal Keyboard"
+    )
   become: true
   block:
     - name: Change tilde key position on current boot
@@ -36,7 +42,9 @@
         owner: root
         group: root
         mode: "0644"
-        unsafe_writes: true # Unsafe write required since copy tries to hardlink with safe writes which can't work into this dir
+        # Unsafe write required since copy tries to hardlink
+        # with safe writes which can't work into this dir
+        unsafe_writes: true
         content: |
           1
 
@@ -50,4 +58,3 @@
         mode: "0644"
       notify:
         - Update initramfs
-
