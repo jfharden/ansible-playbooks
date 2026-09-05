@@ -1,6 +1,6 @@
 ---
-- name: install plain vim
-  when: force_plain_vim or ansible_distribution_version == "20.04"
+- name: Install plain vim
+  when: force_plain_vim or ansible_facts['distribution_version'] == "20.04"
   block:
     - name: Create bitbucket.org/eviljonny/vimconfig directory
       ansible.builtin.file:
@@ -8,7 +8,7 @@
         state: directory
         owner: eviljonny
         group: eviljonny
-        mode: 0700
+        mode: "0700"
 
     - name: Symlink .vim to git dir
       ansible.builtin.file:
@@ -28,13 +28,13 @@
         update: false
         version: migrate-to-coc
 
-    - name: vim is installed
+    - name: Vim is installed
       become: true
       ansible.builtin.apt:
         name: vim
         state: present
 
-    - name: ctags is installed
+    - name: Ctags is installed
       become: true
       ansible.builtin.apt:
         name: exuberant-ctags
@@ -45,41 +45,43 @@
       block:
         - name: Comment out Plug install
           ansible.builtin.replace:
-            path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/vimrc
+            path:
+              /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/vimrc
             regexp: "^(Plug 'instant-markdown/vim-instant-markdown.*)$"
             replace: '" \1'
 
         - name: Ensure vim-instant-markdown dir does not exist
           ansible.builtin.file:
-            path: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/plugged/vim-instant-markdown
+            path:
+              /home/eviljonny/gitdevel/bitbucket.org/eviljonny/vimconfig/plugged/vim-instant-markdown
             state: absent
 
     - name: Install vim-instant-markdown dependencies
       when: not remove_vim_instant_markdown
       block:
-      - name: install linux dependencies
-        when: ansible_system == "Linux"
-        block:
-        - name: Install xdg-utils
-          become: true
-          ansible.builtin.apt:
-            name: xdg-utils
-            state: present
+        - name: Install linux dependencies
+          when: ansible_facts['system'] == "Linux"
+          block:
+            - name: Install xdg-utils
+              become: true
+              ansible.builtin.apt:
+                name: xdg-utils
+                state: present
 
-        - name: Install curl
-          become: true
-          ansible.builtin.apt:
-            name: curl
-            state: present
+            - name: Install curl
+              become: true
+              ansible.builtin.apt:
+                name: curl
+                state: present
 
-        - name: Install instant-markdown-d
-          community.general.npm:
-            executable: /home/eviljonny/.asdf/shims/npm
-            name: instant-markdown-d
-            global: true
+            - name: Install instant-markdown-d
+              community.general.npm:
+                executable: /home/eviljonny/.asdf/shims/npm
+                name: instant-markdown-d
+                global: true
 
 - name: Install neovim
-  when: not force_plain_vim and ansible_distribution_version != "20.04"
+  when: not force_plain_vim and ansible_facts['distribution_version'] != "20.04"
   block:
     - name: Install neovim
       ansible.builtin.include_role:
