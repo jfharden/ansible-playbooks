@@ -26,3 +26,6 @@ install_github_release_version_line_replace_regex:
 install_github_release_architecture:
   x86_64: "x86_64"
   aarch64: "arm64"
+
+# If there is a newer version available, update the target
+install_github_release_update_if_available: true

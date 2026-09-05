@@ -89,13 +89,18 @@
           }}
 
     - name: Install or update the installation
-      when:
+      when: >-
         (not install_github_release_executable_stat.stat.exists)
-        or install_github_release_executable_latest_version_without_prefix
-          is version(
-            install_github_release_executable_version.stdout_lines[0],
-            ">"
+        or (
+          install_github_release_update_if_available
+          and (
+            install_github_release_executable_latest_version_without_prefix
+            is version(
+              install_github_release_executable_version.stdout_lines[0],
+              ">"
+            )
           )
+        )
       block:
         - name: Download executable release archive
           ansible.builtin.get_url:
