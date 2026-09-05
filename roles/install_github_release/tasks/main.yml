@@ -108,26 +108,62 @@
             dest: "/tmp/{{ install_github_release_executable_artifact_name }}"
             mode: "0600"
 
-        - name: Extract exectuable
+        - name: Install gzipped executable
+          when: >-
+            install_github_release_executable_artifact_name.endswith(".gz")
+            and not (
+              install_github_release_executable_artifact_name.endswith(".tar.gz")
+            )
+          block:
+            - name: Uncompress gzip archive
+              ansible.builtin.command: >-
+                gunzip
+                  '/tmp/{{ install_github_release_executable_artifact_name }}'
+              args:
+                creates: >-
+                  {{
+                    install_github_release_executable_artifact_name
+                    | regex_replace(".gz$")
+                  }}
+            - name: Copy executable into target
+              ansible.builtin.copy:
+                src: >-
+                  /tmp/{{
+                    install_github_release_executable_artifact_name
+                    | regex_replace(".gz$")
+                  }}
+                dest: "{{ executable_fullpath }}"
+                mode: "0750"
+
+        - name: Extract compressed archived exectuable
           when:
-            install_github_release_executable_artifact_name.endswith(".zip") or
-            install_github_release_executable_artifact_name.endswith(".tgz") or
-            install_github_release_executable_artifact_name.endswith(".tbz") or
-            install_github_release_executable_artifact_name.endswith("tar.gz")
+            install_github_release_executable_artifact_name.endswith(".zip")
+            or
+            install_github_release_executable_artifact_name.endswith(".tgz")
+            or
+            install_github_release_executable_artifact_name.endswith(".tar.gz")
+            or
+            install_github_release_executable_artifact_name.endswith(".tbz")
+            or
+            install_github_release_executable_artifact_name.endswith(".tar.bz2")
           ansible.builtin.unarchive:
             src: "/tmp/{{ install_github_release_executable_artifact_name }}"
             remote_src: false
             dest: "{{ install_github_release_target_location_directory }}"
 
-        - name: Copy executable into /home/eviljonny/bin
+        - name: Copy uncompressed unarchived executable into target
           when: not(
               install_github_release_executable_artifact_name.endswith(".zip")
               or
+              install_github_release_executable_artifact_name.endswith(".gz")
+              or
               install_github_release_executable_artifact_name.endswith(".tgz")
+              or
+              install_github_release_executable_artifact_name.endswith(".tar.gz")
               or
               install_github_release_executable_artifact_name.endswith(".tbz")
               or
-              install_github_release_executable_artifact_name.endswith("tar.gz")
+              install_github_release_executable_artifact_name.endswith(".tar.bz2")
             )
           ansible.builtin.copy:
             src: "/tmp/{{ install_github_release_executable_artifact_name }}"
