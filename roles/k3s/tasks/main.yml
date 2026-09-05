@@ -1,12 +1,13 @@
+---
 - name: Load firmware cmdline
   ansible.builtin.command:
     cmd: cat /boot/firmware/cmdline.txt
-  register: boot_firmware_cmdline
+  register: k3s_boot_firmware_cmdline
   changed_when: false
 
 - name: Set cgroup_memory option
   become: true
-  when: boot_firmware_cmdline.stdout is not search("cgroup_memory=1")
+  when: k3s_boot_firmware_cmdline.stdout is not search("cgroup_memory=1")
   ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
     regex: '^(.*)$'
@@ -17,7 +18,7 @@
 
 - name: Set cgroup_enable option
   become: true
-  when: boot_firmware_cmdline.stdout is not search("cgroup_enable=memory")
+  when: k3s_boot_firmware_cmdline.stdout is not search("cgroup_enable=memory")
   ansible.builtin.lineinfile:
     path: /boot/firmware/cmdline.txt
     regex: '^(.*)$'
@@ -26,10 +27,10 @@
   notify:
     - reboot machine
 
-# This is requird since haproxy wants to bind to the keepalived IP address, but that IP
-# moves between servers, also there's a circular relationship where keepalived will
-# only hold the IP if haproxy is alive, but haproxy cannot be alive when the IP isn'to
-# available to bind
+# This is requird since haproxy wants to bind to the keepalived IP address, but
+# that IP moves between servers, also there's a circular relationship where
+# keepalived will only hold the IP if haproxy is alive, but haproxy cannot
+# be alive when the IP isn'to available to bind
 - name: Allow binding to non-local ip
   become: true
   ansible.posix.sysctl:
@@ -37,17 +38,17 @@
     value: '1'
     reload: true
 
-
 - name: Reboot
   ansible.builtin.meta: flush_handlers
 
 - name: Setup haproxy
-  include_tasks: ./haproxy.yml
+  ansible.builtin.include_tasks: ./haproxy.yml
 
 - name: Setup keepalived
-  include_tasks: ./keepalived.yml
+  ansible.builtin.include_tasks: ./keepalived.yml
 
-- ansible.builtin.meta: flush_handlers
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Setup k3s
-  include_tasks: ./k3s.yml
+  ansible.builtin.include_tasks: ./k3s.yml
