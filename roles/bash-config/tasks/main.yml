@@ -5,12 +5,13 @@
     state: directory
     owner: eviljonny
     group: eviljonny
-    mode: 0700
-  
+    mode: "0700"
+
 - name: Checkout bashconfig repo
   ansible.builtin.git:
     repo: git@bitbucket.org:eviljonny/bashconfig.git
     dest: /home/eviljonny/gitdevel/bitbucket.org/eviljonny/bashconfig/
+    version: master
     accept_hostkey: true
     force: false
     update: false
@@ -30,7 +31,7 @@
     state: directory
     owner: eviljonny
     group: eviljonny
-    mode: 0700
+    mode: "0700"
 
 - name: Reset connection
   ansible.builtin.meta: reset_connection
