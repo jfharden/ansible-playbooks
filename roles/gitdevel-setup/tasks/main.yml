@@ -5,7 +5,7 @@
     state: directory
     owner: eviljonny
     group: eviljonny
-    mode: 0700
+    mode: "0700"
 
 - name: Create github.com/jfharden directory
   ansible.builtin.file:
@@ -13,7 +13,7 @@
     state: directory
     owner: eviljonny
     group: eviljonny
-    mode: 0700
+    mode: "0700"
 
 - name: Create bitbucket.org/eviljonny directory
   ansible.builtin.file:
@@ -21,28 +21,28 @@
     state: directory
     owner: eviljonny
     group: eviljonny
-    mode: 0700
+    mode: "0700"
 
 - name: Update apt cache
   become: true
   ansible.builtin.apt:
-    update_cache: yes
+    update_cache: true
     cache_valid_time: 3600
 
-- name: git is installed
+- name: Git is installed
   become: true
   ansible.builtin.apt:
     name: git
     state: present
 
-- name: git-gui is installed
+- name: Git-gui is installed
   when: install_visual_git_tools
   become: true
   ansible.builtin.apt:
     name: git-gui
     state: present
 
-- name: meld is installed
+- name: Meld is installed
   when: install_visual_git_tools
   become: true
   ansible.builtin.apt:
