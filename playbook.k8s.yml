@@ -1,9 +1,8 @@
 ---
-- hosts: k8s_control_nodes 
+- name: Configure kubernetes control nodes
+  hosts: k8s_control_nodes
   roles:
-    - role: eviljonny-user
-      vars:
-        passwordless_sudo: true
+    - eviljonny-user
     - gitdevel-setup
     - bash-config
     - asdf-setup
@@ -14,6 +13,7 @@
     - common-tools
     - k3s
 
-- hosts: k8s_agents
+- name: Configure kubernetes worker-only nodes
+  hosts: k8s_agents
   roles:
     - k3s-agent

@@ -28,16 +28,6 @@
         owner: eviljonny
         group: eviljonny
 
-- name: Allow sudo with no password for eviljonny
-  when: passwordless_sudo == true
-  become: true
-  ansible.builtin.copy:
-    dest: /etc/sudoers.d/010_eviljonny-nopasswd
-    owner: root
-    group: root
-    mode: "0440"
-    content: "eviljonny ALL=(ALL) NOPASSWD: ALL"
-
 - name: Check for ssh config file existence
   ansible.builtin.stat:
     path: /home/eviljonny/.ssh/config
