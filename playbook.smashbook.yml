@@ -2,10 +2,8 @@
 - name: Setup Smashbook
   hosts: smashbook
   roles:
-    # DO NOT ADD plex-server until I've updated the install instructions
-    # to use the new installation method:
-    # https://support.plex.tv/articles/235974187-enable-repository-updating-for-supported-linux-server-distributions/#setup-new:~:text=update%0Aapt%20upgrade-,Setup%20New,-To%20setup%20the
     - postgres-user-and-group
     - software-raid
     - nfs-exports
     - borgbackup
+    - plex-server
