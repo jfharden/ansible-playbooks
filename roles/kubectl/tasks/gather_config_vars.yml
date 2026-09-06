@@ -4,3 +4,19 @@
   ansible.builtin.slurp:
     src: /etc/rancher/k3s/k3s.yaml
   register: kubectl_remote_k3s_config
+
+- name: Get k3s version
+  ansible.builtin.shell:
+    cmd: |-
+      set -euo pipefail
+      k3s --version | \
+        grep '^k3s version' | \
+        sed -E 's/^k3s version (v[0-9]+\.[0-9]*)\..*/\1/'
+    executable: /bin/bash
+  register: kubectl_k3s_major_minor_version_command
+  changed_when: false
+
+- name: Set k3s version fact
+  ansible.builtin.set_fact:
+    kubectl_k3s_major_minor_version:
+      "{{ kubectl_k3s_major_minor_version_command.stdout | trim }}"
