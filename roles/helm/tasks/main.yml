@@ -23,44 +23,36 @@
 
 - name: Verify helm GPG key id
   ansible.builtin.shell: >-
-    set -euo pipefail
+    set -euo pipefail;
     test $(
-      gpg --show-keys --with-colons /etc/apt/keyrings/helm-apt-keyring.asc
-      | awk -F: '$1 == "fpr" {print $10}'
-      | head -n 1
+      gpg --show-keys --with-colons /etc/apt/keyrings/helm-apt-keyring.asc |
+      awk -F: '$1 == "fpr" {print $10}' |
+      head -n 1
     ) == "DDF78C3E6EBB2D2CC223C95C62BA89D07698DBC6"
   args:
     executable: /bin/bash
   changed_when: false
 
-- name: Dearmour ansible keyring key
-  when: helm_keyring.changed or not helm_keyring_stat.stat.exists
-  become: true
-  ansible.builtin.command:
-    cmd: >-
-      gpg --dearmor
-        -o /etc/apt/keyrings/helm-apt-keyring.gpg
-        /etc/apt/keyrings/helm-apt-keyring.asc
-    creates: /etc/apt/keyrings/helm-apt-keyring.gpg
-
-- name: Change permissions on helm keyring key
+  # This can be removed once it's been applied everywhere
+- name: Remove old unarmoured helm keyring and repo list
   become: true
   ansible.builtin.file:
-    path: /etc/apt/keyrings/helm-apt-keyring.gpg
-    owner: root
-    group: root
-    mode: '0644'
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/keyrings/helm-apt-keyring.gpg
+    - /etc/apt/sources.list.d/helm.list
 
-- name: Add helm repository into sources list
+- name: Add helm deb822 repository
   become: true
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb
-        [signed-by=/etc/apt/keyrings/helm-apt-keyring.gpg]
-        https://packages.buildkite.com/helm-linux/helm-debian/any/
-        any main
-    state: present
-    filename: helm
+  ansible.builtin.deb822_repository:
+    name: helm
+    types: deb
+    uris: https://packages.buildkite.com/helm-linux/helm-debian/any/
+    suites: any
+    components:
+      - main
+    signed_by: /etc/apt/keyrings/helm-apt-keyring.asc
 
 - name: Install helm
   become: true
