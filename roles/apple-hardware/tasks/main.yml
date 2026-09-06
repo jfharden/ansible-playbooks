@@ -16,6 +16,11 @@
     )
   become: true
   block:
+    # This needs rewriting to build and install from source, the PPA
+    # doesn't seem to be getting updates anymore and the git repo
+    # says to build from source
+    # Install instructions:
+    # https://github.com/patjak/facetimehd/wiki/Installation#get-started-on-ubuntu
     - name: Add facetimehd ppa
       ansible.builtin.apt_repository:
         repo: ppa:greg-whiteley/facetimehd
