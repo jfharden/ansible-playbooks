@@ -12,15 +12,17 @@
   become: true
   ansible.builtin.get_url:
     url: https://packages.buildkite.com/helm-linux/helm-debian/gpgkey
-    dest: /etc/apt/keyrings/helm-apt-keyring.asc
+    dest: /etc/apt/keyrings/helm-apt-keyring.unverified.asc
     mode: "0644"
   register: helm_keyring
 
 - name: Verify helm GPG key id
   ansible.builtin.shell: >-
     set -euo pipefail;
-    test $(
-      gpg --show-keys --with-colons /etc/apt/keyrings/helm-apt-keyring.asc |
+    test $(gpg \
+        --show-keys \
+        --with-colons \
+        /etc/apt/keyrings/helm-apt-keyring.unverified.asc |
       awk -F: '$1 == "fpr" {print $10}' |
       head -n 1
     ) == "DDF78C3E6EBB2D2CC223C95C62BA89D07698DBC6"
@@ -28,7 +30,15 @@
     executable: /bin/bash
   changed_when: false
 
-  # This can be removed once it's been applied everywhere
+- name: Copy verified key
+  become: true
+  ansible.builtin.copy:
+    src: /etc/apt/keyrings/helm-apt-keyring.unverified.asc
+    dest: /etc/apt/keyrings/helm-apt-keyring.asc
+    remote_src: true
+    mode: "preserve"
+
+# This can be removed once it's been applied everywhere
 - name: Remove old unarmoured helm keyring and repo list
   become: true
   ansible.builtin.file:
