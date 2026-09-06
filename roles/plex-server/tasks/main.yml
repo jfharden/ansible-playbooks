@@ -1,68 +1,108 @@
 ---
-- name: Add plex gpg apt-key
+- name: Ensure keyrings directory exists
   become: true
-  ansible.builtin.apt_key:
-    id: CD665CBA0E2F88B7373F7CB997203C7B3ADCA79D
-    url: https://downloads.plex.tv/plex-keys/PlexSign.key
-    keyring: /etc/apt/trusted.gpg.d/plex-sign.gpg
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/
+    mode: '0755'
+    state: directory
+    owner: root
+    group: root
 
-# This needs to be updated to install using the new repo
-- name: Add plex apt repo
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb
-      [arch=amd64 signed-by=/usr/share/keyrings/plexmediaserver.gpg]
-      https://downloads.plex.tv/repo/deb
-      public
-      main
-    filename: plexmediaserver.list
-    state: present
-    update_cache: true
-
-- name: Install early packages
+- name: Copy plex keyring key
   become: true
-  ansible.builtin.apt:
-    name: python3-psutil
-    state: present
+  ansible.builtin.get_url:
+    url: https://downloads.plex.tv/plex-keys/PlexSign.v2.key
+    dest: /etc/apt/keyrings/plexmediaserver.v2.unverified.key
+    mode: "0644"
+  register: helm_keyring
 
-- name: Checkout git repos
-  ansible.builtin.include_role:
-    name: git-repos
-  vars:
-    repos_to_clone:
-      - url: git@github.com:jfharden/rip-scripts.git
-        dir: ~/gitdevel/github.com/jfharden/rip-scripts
-        symlink:
-          from: ~/handbrake-scripts
-          to: handbrake-scripts
-        ref: main
+- name: Verify plex keyring key
+  ansible.builtin.shell: >-
+    set -euo pipefail;
+    test $(gpg \
+        --show-keys \
+        --with-colons \
+        /etc/apt/keyrings/plexmediaserver.v2.unverified.key |
+      grep -A 1 "pub" |
+      awk -F: '$1 == "fpr" {print $10}'
+    ) == "6EFFEB478A6559D75C7C4FE706C521790B9CFFDE"
+    &&
+    test $(gpg \
+        --show-keys \
+        --with-colons \
+        /etc/apt/keyrings/plexmediaserver.v2.unverified.key |
+      grep -A 1 "sub" |
+      awk -F: '$1 == "fpr" {print $10}'
+    ) == "B406F0897A39A570804260540A05F1E6E7AFD573"
+  args:
+    executable: /bin/bash
+  changed_when: false
 
-- name: Set remote-access settings - network-interface
-  community.general.dconf:
-    key: "/org/gnome/desktop/remote-access/network-interface"
-    value: "'lo'"
-    state: present
+- name: Copy verified key
+  become: true
+  ansible.builtin.copy:
+    src: /etc/apt/keyrings/plexmediaserver.v2.unverified.key
+    dest: /etc/apt/keyrings/plexmediaserver.v2.key
+    remote_src: true
+    mode: "preserve"
 
-- name: Set remote-access settings - require-encryption
-  community.general.dconf:
-    key: "/org/gnome/desktop/remote-access/require-encryption"
-    value: "false"
-    state: present
+- name: Add plex deb822 repository
+  become: true
+  ansible.builtin.deb822_repository:
+    name: plex
+    types: deb
+    uris: https://repo.plex.tv/deb/
+    suites: public
+    components:
+      - main
+    signed_by: /etc/apt/keyrings/plexmediaserver.v2.key
 
-- name: Install apt packages
-  loop:
-    - vino
-    - openssh-server
-    - gddrescue
-    - lm-sensors
-    - hddtemp
-    - p7zip-full
-    - beignet-opencl-icd
-  ansible.builtin.apt:
-    name: "{{ item }}"
-    state: present
+# - name: Install early packages
+#   become: true
+#   ansible.builtin.apt:
+#     name: python3-psutil
+#     state: present
+#
+# - name: Checkout git repos
+#   ansible.builtin.include_role:
+#     name: git-repos
+#   vars:
+#     repos_to_clone:
+#       - url: git@github.com:jfharden/rip-scripts.git
+#         dir: ~/gitdevel/github.com/jfharden/rip-scripts
+#         symlink:
+#           from: ~/handbrake-scripts
+#           to: handbrake-scripts
+#         ref: main
+#
+# - name: Set remote-access settings - network-interface
+#   community.general.dconf:
+#     key: "/org/gnome/desktop/remote-access/network-interface"
+#     value: "'lo'"
+#     state: present
+#
+# - name: Set remote-access settings - require-encryption
+#   community.general.dconf:
+#     key: "/org/gnome/desktop/remote-access/require-encryption"
+#     value: "false"
+#     state: present
+#
+# - name: Install apt packages
+#   loop:
+#     - vino
+#     - openssh-server
+#     - gddrescue
+#     - lm-sensors
+#     - hddtemp
+#     - p7zip-full
+#     - beignet-opencl-icd
+#   ansible.builtin.apt:
+#     name: "{{ item }}"
+#     state: present
 
-- name: Install plex media server
-  ansible.builtin.apt:
-    name: plexmediaserver
-    state: present
+# This wont work until we have upgraded the server
+# - name: Install plex media server
+#   become: true
+#   ansible.builtin.apt:
+#     name: plexmediaserver
+#     state: present
