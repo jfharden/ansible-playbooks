@@ -5,6 +5,9 @@
     name: "{{ item }}"
     state: present
   loop:
+    - apt-transport-https
+    - ca-certificates
+    - gnupg
     - p7zip
     - pwgen
     - rename

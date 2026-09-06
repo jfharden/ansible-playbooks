@@ -1,9 +1,4 @@
 ---
-- name: Check to see if helm keyring is installed
-  ansible.builtin.stat:
-    path: /etc/apt/keyrings/helm-apt-keyring.gpg
-  register: helm_keyring_stat
-
 - name: Ensure keyrings directory exists
   become: true
   ansible.builtin.file:
