@@ -1,20 +1,4 @@
 ---
-- name: Install depdencies
-  become: true
-  ansible.builtin.apt:
-    name:
-      - apt-transport-https
-      - ca-certificates
-      - curl
-      - gnupg
-    update_cache: true
-    state: present
-
-- name: Check to see if kubernetes keyring is installed
-  ansible.builtin.stat:
-    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-  register: kubectl_k8s_keyring_stat
-
 - name: Ensure keyrings directory exists
   become: true
   ansible.builtin.file:
@@ -27,42 +11,34 @@
 - name: Copy kubernetes keyring key
   become: true
   ansible.builtin.get_url:
-    url: https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key
+    url: https://pkgs.k8s.io/core:/stable:/{{ k3s_version }}/deb/Release.key
     dest: /etc/apt/keyrings/kubernetes-apt-keyring.key
     mode: "0644"
-  register: kubectl_k8s_keyring
+  vars:
+    k3s_version: "{{ hostvars['k8s-1']['kubectl_k3s_major_minor_version'] }}"
 
-- name: Dearmour ansible keyring key
-  when: kubectl_k8s_keyring.changed or not kubectl_k8s_keyring_stat.stat.exists
-  become: true
-  ansible.builtin.command:
-    cmd: >-
-      gpg
-        --dearmor
-        -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-        /etc/apt/keyrings/kubernetes-apt-keyring.key
-    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-
-- name: Change permissions on k8s keyring key
+# This can be removed once it's been applied everywhere
+- name: Remove old unarmoured helm keyring and repo list
   become: true
   ansible.builtin.file:
-    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-    owner: root
-    group: root
-    mode: '0644'
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    - /etc/apt/sources.list.d/kubernetes.list
 
-- name: Add k8s repository into sources list
+- name: Add k8s deb822 repository
   become: true
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb
-      [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg]
-      https://pkgs.k8s.io/core:/stable:/v1.33/deb/
-      /
-    state: present
-    filename: kubernetes
+  ansible.builtin.deb822_repository:
+    name: kubernetes
+    types: deb
+    uris: https://pkgs.k8s.io/core:/stable:/{{ k3s_version }}/deb/
+    suites: "/"
+    signed_by: /etc/apt/keyrings/kubernetes-apt-keyring.key
+  vars:
+    k3s_version: "{{ hostvars['k8s-1']['kubectl_k3s_major_minor_version'] }}"
 
-- name: Install depdencies
+- name: Install kubectl
   become: true
   ansible.builtin.apt:
     name:
